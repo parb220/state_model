@@ -16,7 +16,7 @@ void CMSSM::StateEquation(unsigned int t, const vector<TDenseVector> &y)
 	// nothing should be done yet.
 }
 
-unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function, const TDenseVector &input)
+unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 // Return value of error has the following meaning
 // 	0: success
 // 	1: some A returned by MakeABPsiPiC is not invertible
@@ -28,7 +28,7 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function, const TDenseVec
 // 	6: V1a*LeftSolve(A[1][1],Pi[1][1]) is not of full row rank
 // 	7: V1a*LeftSolve(A[1][0],Pi[1][0]) is not of full row rank
 {
-	bool gensys_err = function->convert(A,B,Psi,Pi,C,x,input);
+	bool gensys_err = function->convert(A,B,Psi,Pi,C,x,state_equation_parameter);
 	if (gensys_err)
 	{
 		ClearStateEquation(); 	
@@ -36,12 +36,8 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function, const TDenseVec
 	}
 
 	// sizes 
-	nS = 2; 
-	size_t nR = 6; // ???	
-	nL = 4; 
-	nNu = (size_t)pow(nS,nL);	// nNu = 16
-	nZ = A[0][0].rows; 
-	nE = Psi[0][0].cols; 
+	size_t originalNS = 2; 	// NOT equal to nS
+	size_t nR = 6; 
 	size_t nExpectation = Pi[0][0].cols; 
 
 	// probability of staying in zero lower bound
@@ -60,8 +56,9 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function, const TDenseVec
 	vector<TDenseMatrix> intermediate_V(nR,TDenseMatrix(nZ,nZ,0.0) );
 
 	// c_hat, d, and I
-	vector<TDenseVector>c_hat(nS,TDenseVector(nZ,0.0) ); 
-	vector<TDenseVector>d(nS,TDenseVector(nZ,0.0));
+	vector<TDenseVector>c_hat(originalNS,TDenseVector(nZ,0.0) ); 
+	vector<TDenseVector>d(originalNS,TDenseVector(nZ,0.0));
+
 	c_hat[0] = LeftSolve( (A[0][0]-B[0][0]), C[0][0] ); 
 	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] );
 	d[0] = C[0][1] - A[0][1]*c_hat[0] + B[0][1]*c_hat[1]; 

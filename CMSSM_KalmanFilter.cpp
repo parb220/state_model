@@ -4,11 +4,43 @@
 
 using namespace std; 
 
-unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const TDenseVector &z_0, const TDenseMatrix &P_0, MakeTransitionProbMatrix *transition_matrix_function, const TDenseVector &initial_prob)
+double CMSSM::minus_log_likelihood(const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, TransitionProbMatrixFunction *transition_matrix_function, const TDenseVector &initial_prob)
+{
+	double minus_log_likelihood=1.0e30; 
+	vector<vector<TDenseVector> > z_tm1; 
+	vector<vector<TDenseMatrix> > P_tm1; 
+	vector<TDenseVector> p_tm1; 
+
+	// Get initial values fo z_0 and P_9 from first few observations
+	size_t initial_period = 3; 	
+	vector<TDenseVector> sub_y(y.begin(), y.begin()+initial_period); 
+	double log_likelihood; 
+	bool error_code = KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, z_0, P_0, transition_matrix_function, initial_prob); 
+	if (!error_code)
+	{
+		vector<TDenseVector> new_z_0 = z_tm1.back(); 
+		vector<TDenseMatrix> new_P_0 = P_tm1.back(); 
+		
+		// Kalman filter 
+		sub_y = vector<TDenseVector>(y.begin()+initial_period+1, y.end()); 
+		error_code = KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, new_z_0, new_P_0, transition_matrix_function, initial_prob); 
+		if (!error_code)
+			minus_log_likelihood = -log_likelihood; 
+	}
+	return minus_log_likelihood; 
+}
+
+
+bool CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, TransitionProbMatrixFunction *transition_matrix_function, const TDenseVector &initial_prob)
 // Calculates
 // 	log_likelihood = p (Y(T) | parameters)
 //
 // Returned values
+// 	error_code:
+// 		false:	success
+//		true:	error occurred
+//	and
+//
 // 	for k=0,1,...,nXi-1 and t=0,1,...,T-1
 // 	z_tm1(t,k) = E( z(t) | Y(t-1), xi(t)=k ), 
 // 	P_tm1(t,k) = variance( z(t) | Y(t-1), xi(t)=k )
@@ -27,8 +59,8 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 //
 // Input values
 // 	y(t):	nY-by-1 TDenseVector, measurment variables at time t, t=0, 1, ..., T-1
-// 	z_0:	nZ-by-1 TDenseVector, E( z(0) | xi(0)=k )
-// 	P_0:	nZ-by-nZ TDenseMatrix, variance( z(0) | xi(0)=k )
+// 	z_0:	nZ-by-1 TDenseVector, E( z(0) | xi(0)=k ) k=0, 1, ..., nXi-1
+// 	P_0:	nZ-by-nZ TDenseMatrix, variance( z(0) | xi(0)=k ) k=0, 1, ..., nXi-1
 // 	initial_prob[k]:	p( xi(0) = k), k=0, 1, ..., nXi-1
 //
 // Valules inherent in CMSSM model
@@ -49,7 +81,7 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 	// Get state space parameters 
 	StateEquation(0,y); 	
 
-	unsigned int error_code=0;	// to be returned;
+	bool error_code=false;	// to be returned;
 
 	// Sizes and constants
 	size_t T = y.size(); 	
@@ -78,8 +110,8 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 	// initialization
 	for (unsigned int i=0; i<nXi; i++)
 	{
-		z_tm1[0][i] = z_0;
-		P_tm1[0][i] = P_0; 
+		z_tm1[0][i] = z_0[i];
+		P_tm1[0][i] = P_0[i]; 
 	}
 	
 	// debugging OK tables
@@ -96,8 +128,7 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 			p_tm1[t] = initial_prob;
 		else
 		{
-			vector<TDenseVector> sub_y(y.begin(), y.begin()+(t-1));
-			TDenseMatrix Q = transition_matrix_function->convert(nXi,sub_y,x); 
+			transition_matrix_function->convert(Q, t, y, x, nS, nTL, transition_prob_parameter); 
 			p_tm1[t].Multiply(Q,p_t[t-1]);  
 		}
 
@@ -115,7 +146,7 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 					{
 						if(!OK_t[t-1][xi])
 						{
-							error_code = 1; 
+							error_code = true; 
 							log_likelihood = MINUS_INFINITY; 
 							return error_code; 
 						}
@@ -232,6 +263,7 @@ unsigned int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVec
 		// End Hamilton filter
 
 		// Get State space parameter
-		StateEquation(0, y); 
-	} 	
+		StateEquation(t+1, y); 
+	}
+	return error_code; 	
 }

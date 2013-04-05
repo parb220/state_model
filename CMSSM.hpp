@@ -16,10 +16,10 @@
 
 using namespace std; 
 
-class MakeVParameter; 
-class MakeMParameter; 
-class MakeTransitionProbMatrix; 
+class MakeABPsiPiC; 
+class TransitionProbMatrixFunction; 
 class CMSSM; 
+class ObjectiveFunction_Validation; 
 
 class MakeABPsiPiC 
 // Derive gensys form of the state equation from x and makeAB_inputs
@@ -31,7 +31,7 @@ class MakeABPsiPiC
 // C is an matrix (vector<vector<> >) of TDenseVector
 {
 public:
-	virtual bool convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x, const TDenseVector &makeAB_input); 
+	virtual bool convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x, const TDenseVector &free_parameter)=0; 
 };
 
 class MeasurementEquationFunction
@@ -40,18 +40,18 @@ class MeasurementEquationFunction
 // free_parameter contains any parameters (e.g., gpistar) that can be passed 
 {
 public:
-	virtual bool convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x, const TDenseVector &free_parameter); 
+	virtual bool convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x, const TDenseVector &free_parameter)=0; 
 }; 
 
 
-class MakeTransitionProbMatrix
+class TransitionProbMatrixFunction
 // Transition probability derived from a vector and measurment variables
 // s: number of regimes (transition probability matrix is s-by-s)
 // Y: measurement variables corresponding to one/multiple time points
 // x: parameters of the original model from which CMSSM is derived 
 {
 public:
-	virtual TDenseMatrix convert(size_t s, const vector<TDenseVector> &, const TDenseVector &) = 0; 
+	virtual TDenseMatrix convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x, size_t nS, size_t nTL, const TDenseVector &free_parameter) = 0; 
 };
 
 //== Reigme (Markov) swithcing state model ==
@@ -87,23 +87,45 @@ public:
 	vector <TDenseMatrix> Phi_e; 	//
 	vector <TDenseMatrix> V;	//	V = Phi_e*Phi_e'
 
+	TDenseMatrix Q;	// Transition matrix;
+
+	TDenseVector state_equation_parameter;	// free parameters to be used in state equations
+	TDenseVector measurement_equation_parameter;	// free parameters to be used in measurement equations
+	TDenseVector transition_prob_parameter;	// free parameters to be used in transition prob
+
 	// Parameter specification for the state equation 
 	void ClearStateEquation(); 
-	unsigned int StateEquationHelper(MakeABPsiPiC *, const TDenseVector &free_parameter); 	
+	unsigned int StateEquationHelper(MakeABPsiPiC *); 	
 	void StateEquation(unsigned int t, const vector<TDenseVector> &y);
 
 	// Parameter specification for the measurement equation
-	void MeasurementEquation(MeasurementEquationFunction *function, const TDenseVector &free_parameter); 
-	
+	void MeasurementEquation(MeasurementEquationFunction *function);
+
+	// Valid initial point
+	double ValidInitialPoint_ObjectiveFunction(MakeABPsiPiC *); 
+	bool ValidInitialPoint(TDenseVector &, const TDenseVector &x0, size_t max_count, TDenseVector& lb, TDenseVector &ub); 
+
 	// Constructor and destrunctor 
-	CMSSM() : nL(0), nTL(0), nS(0), nNu(0), nXi(0), nZeta(0), nZ(0), nY(0), nE(0), nU(0), x(0) {}
-	CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nE, size_t _nU, const TDenseVector &); 
+	CMSSM();
+	CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nE, size_t _nU, const TDenseVector &, const TDenseVector &, const TDenseVector &, const TDenseVector &); 
 	CMSSM(const CMSSM &right); 
 	CMSSM &operator=(const CMSSM &right); 
 	~CMSSM() {}
 
 	// Kalman filter
-	unsigned int KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const TDenseVector &z_0, const TDenseMatrix &P_0, MakeTransitionProbMatrix *transition_matrix_function, const TDenseVector &initial_prob);
+	bool KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, TransitionProbMatrixFunction *transition_matrix_function, const TDenseVector &initial_prob);
+	double minus_log_likelihood(const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, TransitionProbMatrixFunction *transition_matrix_function, const TDenseVector &initial_prob);
+
 }; 
+
+class ObjectiveFunction_Validation
+{
+public:
+	static MakeABPsiPiC *ABPsiPiC_function; 
+	static TDenseVector state_equation_parameter; 
+	static TDenseVector measurement_equation_parameter; 
+	static TDenseVector transition_prob_parameter;
+	static void *function(int *mode, int *n, double *x, double *f, double *g, int *);  
+};
 
 #endif

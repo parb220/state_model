@@ -68,7 +68,7 @@ public:
 	size_t nZ;	// number of state variables
 	size_t nY;	// number of measurement variables
 	size_t nU;	// number of noise variables in measurement
-	size_t nE; 	// number of noise variables in measurement
+	size_t nE; 	// number of noise variables in state 
 
 	TDenseVector x;	// 	parameters of the original model from which CMSSM is derived
 
@@ -104,6 +104,9 @@ public:
 	// Valid initial point
 	double ValidInitialPoint_ObjectiveFunction(MakeABPsiPiC *); 
 	bool ValidInitialPoint(TDenseVector &, const TDenseVector &x0, size_t max_count, TDenseVector& lb, TDenseVector &ub); 
+
+	// Check solution
+	bool CheckSolution(MakeABPsiPiC *); 
 
 	// Constructor and destrunctor 
 	CMSSM();

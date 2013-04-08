@@ -74,6 +74,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 {
 	bool error = true;
 	const double INFINITE_BOUND = 10E10; 
+	const double TOLERANCE = 0.0; 
 
 	if (lb.dim != x0.dim)
 		lb = TDenseVector(-INFINITE_BOUND, x0.dim); 
@@ -107,7 +108,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 	double *clamda = new double[nctotal];	// Lagrangian coefficients
 	double *R = new double[ldR*n]; 		// Hessian of Lagrangian
 	double *x_raw = new double[n]; 		// solution
-	int leniw = 3*n*nclin+2*ncnln; 
+	int leniw = 3*n+nclin+2*ncnln; 
 	int *iw = new int[leniw];  
 	int lenw; 
 	if (nclin==0 && ncnln ==0)
@@ -131,10 +132,12 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 	}
 	while (error && count < max_count)
 	{
-		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, (ObjectiveFunction_Validation::function), &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
+		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
 		fval.SetElement(f, count); 
-		if ( inform == 0 && fval[count] > 0)
+		if (inform == 0 && fval[count] < TOLERANCE) 
+			error = false; 
+		else 
 		{
 			for (unsigned int i=0; i<x.dim; i++)
 			{
@@ -161,8 +164,6 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 			}
 			count ++; 
 		}
-		else 
-			error = false; 
 	}
 
 	for (unsigned int i=0; i<x.dim; i++)
@@ -182,4 +183,5 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 	delete [] c; 
 	delete [] g; 
 	// ====================================================
+	return error; 
 }

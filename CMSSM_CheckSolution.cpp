@@ -1,9 +1,12 @@
-#include <cmath>
+#include <iostream>
 #include "CMSSM.hpp"
 
 using namespace std;
 
 bool CMSSM::CheckSolution(MakeABPsiPiC *function)
+// Returns
+// 	true if error occurred
+// 	false if success
 {
 	int error_code = StateEquationHelper(function); 
 	if (error_code)
@@ -32,14 +35,17 @@ bool CMSSM::CheckSolution(MakeABPsiPiC *function)
 		TDenseMatrix XSchur = LeftSolve(A[i][i],B[i][i]); 
 		Schur(T, eR, eI, U, XSchur, true); 
 		
+		// abs_eig = abs(ordeig(T)); 
+		// select = abs_eig < 1.0; 
+		// n_stable = sum(select); 
 		int *select = new int[XSchur.rows]; 
 		unsigned int nStable = 0; 
 		for (unsigned int j=0; j<eR.dim; j++)
 		{
-			if (sqrt(eR[j]*eR[j] + eI[j]*eI[j]) < 1.0)
+			if (eR[j]*eR[j] + eI[j]*eI[j] < 1.0)
 			{
 				nStable ++; 
-				select[j] =1; 
+				select[j] = 1; 
 			}
 			else 
 				select[j] = 0; 
@@ -56,15 +62,18 @@ bool CMSSM::CheckSolution(MakeABPsiPiC *function)
 			TDenseVector OrderER, OrderEI; 
 			OrderSchur(OrderT, OrderER, OrderEI, OrderU, T, U, select, true); 
 			Vs[i].Resize(nZ, nStable); 
-			Va[i].Resize(nZ, nZ-nStable); 
+			Va[i].Resize(nZ-nStable, nZ);
+			// Vs = OrderU(:,1:nStable); 
+			// Va = OrderU(:,nStable+1:end)'; 
 			for (unsigned int k=0; k<nZ; k++)
 			{
 				for (unsigned int l=0; l<nStable; l++)
 					Vs[i].SetElement(OrderU(k,l), k, l); 
 				for (unsigned int l=nStable; l<nZ; l++)
-					Va[i].SetElement(OrderU(k,l), k, l-nStable); 
+					Va[i].SetElement(OrderU(k,l), l-nStable, k); 
 			}
 		}
+		delete [] select; 
 	}
 
 	vector<vector<vector<TDenseVector> > >intermediate_b(2,vector<vector<TDenseVector> >(nOriginalRegime, vector<TDenseVector>(nOriginalRegime, TDenseVector(nZ,0.0) ) ) ); 
@@ -145,9 +154,12 @@ bool CMSSM::CheckSolution(MakeABPsiPiC *function)
 	for (unsigned int i=0; i<nOriginalRegime; i++)
 	{
 		unsigned j = (i==0) ? 1 : 0; 
-		total += Norm(p[i]*GeneralizedInverse(Pi[i][i])*A[i][i]*intermediate_b[1][i][i] - C[i][i] + (A[i][i]*intermediate_F[1][i][i] - B[i][i])*c_hat[i] + (1.0-p[i])*GeneralizedInverse(Pi[j][i])*A[j][i]*intermediate_b[1][j][i]-C[j][i]+(A[j][i]*intermediate_F[1][j][i]-B[j][i])*c_hat[i]); 
+		total += Norm(p[i]*GeneralizedInverse(Pi[i][i])*(A[i][i]*intermediate_b[1][i][i] - C[i][i] + (A[i][i]*intermediate_F[1][i][i] - B[i][i])*c_hat[i]) + (1.0-p[i])*GeneralizedInverse(Pi[j][i])*(A[j][i]*intermediate_b[1][j][i]-C[j][i]+(A[j][i]*intermediate_F[1][j][i]-B[j][i])*c_hat[i]) ); 
 		total += Norm(p[i]*GeneralizedInverse(Pi[i][i])*(A[i][i]*intermediate_F[1][i][i]-B[i][i]) + (1.0-p[i])*GeneralizedInverse(Pi[j][i])*(A[j][i]*intermediate_F[1][j][i]-B[j][i]) ); 
 		total += Norm(GeneralizedInverse(Pi[i][i])*(A[i][i]*intermediate_b[0][i][i]-C[i][i]+(A[i][i]*intermediate_F[0][i][i]-B[i][i])*c_hat[i]) ); 
-		total += Norm(GeneralizedInverse(Pi[i][i])*(A[i][i]*intermediate_F[0][i][i]-B[0][0])*Vs[i]); 
+		total += Norm(GeneralizedInverse(Pi[i][i])*(A[i][i]*intermediate_F[0][i][i]-B[i][i])*Vs[i]); 
 	}
+
+	cout << " Total difference = " << total << " (should be zero)\n"; 
+	return false; 
 } 

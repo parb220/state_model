@@ -1,4 +1,5 @@
-#include "CMSSM.hpp"
+#include "CMakeABPsiPiC_ststm1.hpp"
+#include "CMeasurementEquationFunction_test.hpp"
 
 using namespace std; 
 
@@ -12,5 +13,6 @@ int main()
 	state_equation_parameter.SetElement(0.7,3);	// sc, Steady state share of private consumption in C+G
 	state_equation_parameter.SetElement(0.00025,4);	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e04*4-0.0015 annually
 
-	
+	TDenseVector measurement_equation_parameter(1); 
+	measurement_equation_parameter.SetElement(0.005,0); 	// measurment_equation_parameter[0] = gpistar	
 }

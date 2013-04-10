@@ -18,6 +18,7 @@ using namespace std;
 
 class MakeABPsiPiC; 
 class TransitionProbMatrixFunction; 
+class MeasurementEquationFunction; 
 class CMSSM; 
 class ObjectiveFunction_Validation; 
 
@@ -51,7 +52,7 @@ class TransitionProbMatrixFunction
 // x: parameters of the original model from which CMSSM is derived 
 {
 public:
-	virtual TDenseMatrix convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x, size_t nS, size_t nTL, const TDenseVector &free_parameter) = 0; 
+	virtual void convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x, size_t nS, size_t nTL, const TDenseVector &free_parameter) = 0; 
 };
 
 //== Reigme (Markov) swithcing state model ==

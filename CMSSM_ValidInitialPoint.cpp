@@ -73,7 +73,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 // 	fval:	vector of objective function values. A value <0 means that a determinate solution in regime 1 has been found
 {
 	bool error = true;
-	const double INFINITE_BOUND = 10E10; 
+	const double INFINITE_BOUND = 10E20; 
 	const double TOLERANCE = 0.0; 
 
 	if (lb.dim != x0.dim)
@@ -93,7 +93,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 	unsigned int count = 0; 
 	
 	// ====== variables for npsol ======
-	int n = x.dim; 
+	int n = x0.dim; 
 	int nclin = 0; 	// number of linear constraints
 	int ncnln = 0; 	// number of nonlinear constraints
 	int nctotal = n + nclin + nctotal; 

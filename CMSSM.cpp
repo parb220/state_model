@@ -31,10 +31,10 @@ transition_prob_parameter()
 }
 
 
-CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nE, size_t _nU, const TDenseVector &_x, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp) :
+CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp) :
 nL(_nL), nTL(_nTL),
-nS(_nS), nZ(_nZ), nY(_nY), nE(_nE), nU(_nU),
-x(_x),
+nS(_nS), nZ(0), nY(0), nE(0), nU(0),
+x(),
 state_equation_parameter(_sfp), 
 measurement_equation_parameter(_mfp), 
 transition_prob_parameter(_tpp) 
@@ -49,14 +49,14 @@ transition_prob_parameter(_tpp)
 	Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) ); 
 	Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );
 
-        a = vector<TDenseVector>(nNu, TDenseVector(nY,0.0));
-        H = vector<TDenseMatrix>(nNu, TDenseMatrix(nY,nZ,0.0));
-        Phi_u = vector<TDenseMatrix>(nNu, TDenseMatrix(nY,nU,0.0));
-        R = vector<TDenseMatrix>(nNu, TDenseMatrix(nY,nY,0.0));
-        b = vector<TDenseVector>(nNu, TDenseVector(nZ,0.0));
-        F = vector<TDenseMatrix>(nNu, TDenseMatrix(nZ,nZ,0.0));
-        Phi_e = vector<TDenseMatrix>(nNu, TDenseMatrix(nZ,nE,0.0));
-        V = vector<TDenseMatrix>(nNu, TDenseMatrix(nZ,nZ,0.0));
+        a = vector<TDenseVector>(nNu, TDenseVector(0,0.0));
+        H = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        Phi_u = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        R = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        b = vector<TDenseVector>(nNu, TDenseVector(0,0.0));
+        F = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        Phi_e = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        V = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
 
 	Q = TDenseMatrix(nXi,nXi,0.0); 
 }

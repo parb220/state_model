@@ -1,3 +1,7 @@
+/*
+ * Not necessary, because the original matlab program does this for testing
+ */
+
 #include <iostream>
 #include "CMSSM.hpp"
 

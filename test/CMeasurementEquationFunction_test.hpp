@@ -2,6 +2,7 @@
 #define _MEASUREMENT_EQUATION_FUNCTION_TEST
 
 #include "CMSSM.hpp"
+#include "findequilibrium.hpp"
 
 class MeasurementEquationFunction_test : public MeasurementEquationFunction
 {
@@ -14,7 +15,7 @@ bool MeasurementEquationFunction_test::convert(vector<TDenseVector> &a, vector<T
 	for (unsigned int i=0; i<a.size(); i++)
 	{
 		a[i].Zeros(a[i].dim); 
-		a[i].SetElement(free_parameter[0],1);	// free_parameter[0]: gpistar
+		a[i].SetElement(free_parameter[GPISTAR_MEASUREMENT],1);	// free_parameter[0]: gpistar
 
 		H[i].Zeros(H[i].rows,H[i].cols); 
 		H[i].SetElement(1.0,0,0); 

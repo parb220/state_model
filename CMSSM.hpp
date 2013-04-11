@@ -103,7 +103,6 @@ public:
 	void MeasurementEquation(MeasurementEquationFunction *function);
 
 	// Valid initial point
-	double ValidInitialPoint_ObjectiveFunction(MakeABPsiPiC *); 
 	bool ValidInitialPoint(TDenseVector &, const TDenseVector &x0, size_t max_count, TDenseVector& lb, TDenseVector &ub); 
 
 	// Check solution
@@ -111,7 +110,7 @@ public:
 
 	// Constructor and destrunctor 
 	CMSSM();
-	CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nE, size_t _nU, const TDenseVector &, const TDenseVector &, const TDenseVector &, const TDenseVector &); 
+	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &); 
 	CMSSM(const CMSSM &right); 
 	CMSSM &operator=(const CMSSM &right); 
 	~CMSSM() {}

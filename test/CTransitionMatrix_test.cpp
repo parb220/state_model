@@ -26,7 +26,7 @@ void CTransitionProbMatrixFunction_Test :: convert(TDenseMatrix &Q, unsigned int
 	Qs.SetElement(2,2,1.0); 
 	Qs.SetElement(3,3,x[x.dim-1]); 
 
-	if (y[t][2] >= free_parameter[0])	// free_parameter[0]: cutoff
+	if (y[t][2] >= free_parameter[CUTOFF_TRANSITION])	// free_parameter[0]: cutoff
 		Qs.SetElement(0,0,1.0);
 	else 
 		Qs.SetElement(1,0,1.0); 

@@ -31,11 +31,11 @@ bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vecto
 	TDenseVector gsigmai(nRegime,0.0); gsigmai.SetElement(x[i],0); gsigmai.SetElement(x[j],1); i++; j++; 	// Monetary policy
 	double giota = x[i]; 	// ZLB adjustment for level of fall in natural rate of ineterest	
 
-	double glambdaz = free_parameter[0];	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
-	double rn = free_parameter[1];	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
-       	double gpistar = free_parameter[2];	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
-        double sc = free_parameter[3];	// sc, Steady state share of private consumption in C+G
-        double Rlow = free_parameter[4];	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarte	
+	double glambdaz = free_parameter[GLAMBDAZ_STATE];	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
+	double rn = free_parameter[RN_STATE];	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
+       	double gpistar = free_parameter[GPISTAR_STATE];	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
+        double sc = free_parameter[SC_STATE];	// sc, Steady state share of private consumption in C+G
+        double Rlow = free_parameter[RLOW_STATE];	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarte	
 
 	double Rstar = gpistar + rn;	// corresponding to i in Zha's notes
 	double gbeta = glambdaz / (1.0+rn);	// 0.995 because gbeta=glambdaz/(1+rn) where rn=4% annually (natural rate of interest or steady state real interest rate)

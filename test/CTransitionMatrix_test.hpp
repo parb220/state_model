@@ -2,6 +2,7 @@
 #define _TRANSITION_MATRIX_TEST
 
 #include "CMSSM.hpp"
+#include "findequilibrium.hpp"
 using namespace std; 
 
 class CTransitionProbMatrixFunction_Test : public TransitionProbMatrixFunction

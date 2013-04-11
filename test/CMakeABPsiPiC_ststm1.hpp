@@ -2,6 +2,7 @@
 #define _MAKE_A_B_PSI_PI_C_STSTM1
 
 #include "CMSSM.hpp"
+#include "findequilibrium.hpp"
 
 class MakeABPsiPiC_ststm1 : public MakeABPsiPiC
 {

@@ -38,6 +38,8 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 	// sizes 
 	size_t originalNS = 2; 	// NOT equal to nS
 	size_t nR = 6; 
+	size_t nZ = A[0][0].rows; 
+	size_t nE = Psi[0][0].cols; 
 	size_t nExpectation = Pi[0][0].cols; 
 
 	// probability of staying in zero lower bound

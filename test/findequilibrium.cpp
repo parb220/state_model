@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "findequilibrium.hpp"
 #include "CMakeABPsiPiC_ststm1.hpp"
 #include "CMeasurementEquationFunction_test.hpp"
@@ -24,30 +25,31 @@ int main()
 	TDenseVector transition_prob_parameter(1); 
 	transition_prob_parameter.SetElement(0.005/4, CUTOFF_TRANSITION);	// transition_prob_parameter[0] = cutoff; 
 
-	// Loading data; 
-
 	// sizes
 	size_t nS = 4; 
 	size_t nL = 1; 
 	size_t nTL = 1; 
-	size_t nZ = 7; 
-	size_t nU = 0; 
-	
+	size_t nFree = 23+6+1; // 23: model parameters; 6=2X3: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 1: probability of staying in ZLB
 
-	// CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nE, size_t _nU, const TDenseVector &_x, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp)
+	// Setting up the CMSSM model
+	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter); 
+	model.x = TDenseVector(nFree); 
 
+	// Find valid starting value
 	MakeABPsiPiC_ststm1 function_ABPsiPiC; 
 	ObjectiveFunction_Validation::ABPsiPiC_function = &function_ABPsiPiC; 
 	ObjectiveFunction_Validation::state_equation_parameter = state_equation_parameter; 
+	ObjectiveFunction_Validation::measurement_equation_parameter = measurement_equation_parameter; 
+	ObjectiveFunction_Validation::transition_prob_parameter = transition_prob_parameter; 
 
-	// Omit checking if the model makes sense under 1st regime (Line 36 -- 42)
-	
-	// Find valid starting value
-	// Lower and upper bounds 
-	TDenseVector lb, ub; MakeLbUb_ststm1(lb, ub); 	
-	size_t nFree = 23+6+1; // 23: model parameters; 6=2X3: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 1: probability of staying in ZLB
-	TDenseVector x0(nFree); 	
-	CMSSM model( 
-	if (	
+	TDenseVector lb, ub; MakeLbUb_ststm1(lb, ub); 	// Lower and upper bounds 
+	TDenseVector x0(nFree);  x0.RandomNormal(nFree); // Initial guess of x
+	TDenseVector function_value; 			// To hold function values of all max_count searches
+	size_t max_count = 500; 
+	if ( model.ValidInitialPoint(function_value, x0, max_count, lb, ub) )
+	{
+		cerr << "------ Attempting to find valid initial point for estimation: no equilibrium exists ----------" << endl; 
+		abort(); 
+	}
 
 }

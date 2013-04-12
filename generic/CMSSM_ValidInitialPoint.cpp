@@ -139,7 +139,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 			error = false; 
 		else 
 		{
-			for (unsigned int i=0; i<x.dim; i++)
+			for (unsigned int i=0; i<x0.dim; i++)
 			{
 				if (lb[i] > -INFINITE_BOUND)
 				{
@@ -165,8 +165,9 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 			count ++; 
 		}
 	}
-
-	for (unsigned int i=0; i<x.dim; i++)
+	
+	x.Resize(x0.dim); 
+	for (unsigned int i=0; i<x0.dim; i++)
 		x.SetElement(x_raw[i], i); 
 
 	// ========= release npsol variables ==================

@@ -49,14 +49,14 @@ transition_prob_parameter(_tpp)
 	Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) ); 
 	Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );
 
-        a = vector<TDenseVector>(nNu, TDenseVector(0,0.0));
-        H = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
-        Phi_u = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
-        R = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
-        b = vector<TDenseVector>(nNu, TDenseVector(0,0.0));
-        F = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
-        Phi_e = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
-        V = vector<TDenseMatrix>(nNu, TDenseMatrix(0,0,0.0));
+        a = vector<TDenseVector>(nNu, TDenseVector());
+        H = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        Phi_u = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        R = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        b = vector<TDenseVector>(nNu, TDenseVector());
+        F = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        Phi_e = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        V = vector<TDenseMatrix>(nNu, TDenseMatrix());
 
 	Q = TDenseMatrix(nXi,nXi,0.0); 
 }

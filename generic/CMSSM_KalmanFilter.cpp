@@ -215,7 +215,7 @@ bool CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &
 								log_conditional_likelihood[t][xi] = MINUS_INFINITY; 
 								throw dw_exception("Error occurred in LeftSolve()"); 
 							}
-							log_conditional_likelihood[t][xi] = CONSTANT - 0.5*(log_abs_determinant+InnerProduct(ey_tm1[t][xi],x) );
+							log_conditional_likelihood[t][xi] = CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],x));
 							// computes z_t[t][xi] and P[t][xi]
 							z_t[t][xi].Add(z_tm1[t][xi], K*x); 
 							P_t[t][xi].Subtract(P_tm1[t][xi], K*LeftSolve(N_tm1[t][xi],Transpose(K) ) ); 

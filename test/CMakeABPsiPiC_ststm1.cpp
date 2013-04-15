@@ -13,7 +13,8 @@ bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vecto
 // err is one if some A{i} is not of full rank and zero otherwise.
 {
 	bool error_code = false; 
-	unsigned i=0, j=x.dim; 
+	size_t nX=14; 
+	unsigned i=0, j=nX; 
 	size_t nRegime = 2; 
 	
 	double gsigma = x[i];	i++;
@@ -45,16 +46,23 @@ bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vecto
 	TDenseVector gchir(nRegime,0.0); gchir.SetElement(1.0,0); 
 
 	size_t n_ = 7; 
-	A = vector<vector<TDenseMatrix> >(nRegime, vector<TDenseMatrix>(nRegime, TDenseMatrix(n_,n_,0.0) ) ); 
-	B = vector<vector<TDenseMatrix> >(nRegime, vector<TDenseMatrix>(nRegime, TDenseMatrix(n_,n_,0.0) ) ); 
-	C = vector<vector<TDenseVector> >(nRegime, vector<TDenseVector>(nRegime, TDenseVector(n_,0.0) ) ); 
-	Psi = vector<vector<TDenseMatrix> >(nRegime, vector<TDenseMatrix>(nRegime, TDenseMatrix(n_,3,0.0) ) ); 
-	Pi = vector<vector<TDenseMatrix> >(nRegime, vector<TDenseMatrix>(nRegime, TDenseMatrix(n_,2,0.0) ) ); 
+	A.resize(nRegime); 
+	B.resize(nRegime); 
+	C.resize(nRegime); 
+	Psi.resize(nRegime); 
+	Pi.resize(nRegime); 
 
 	for (unsigned int i=0; i<nRegime; i++)
 	{
+		A[i].resize(nRegime); 
+		B[i].resize(nRegime); 
+		C[i].resize(nRegime); 
+		Psi[i].resize(nRegime); 
+		Pi[i].resize(nRegime); 
 		for (unsigned int j=0; j<nRegime; j++)
 		{
+			A[i][j].Resize(n_, n_); 
+			A[i][j].Zeros(); 
 			A[i][j].SetElement(1.0+gbeta*ggamma[i],0,0); 
 			A[i][j].SetElement(-gpsi2[i]*(geta+gsigma/sc),0,1);
 			A[i][j].SetElement(-gpsi2(i),0,3);  
@@ -73,6 +81,8 @@ bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vecto
 			A[i][j].SetElement(1.0,5,0);
 			A[i][j].SetElement(1.0,6,1);
 
+			B[i][j].Resize(n_,n_); 
+			B[i][j].Zeros(); 
 			B[i][j].SetElement(ggamma[j],0,0);
 			B[i][j].SetElement(-gpsi2[j]*(gsigma-1.0)*b[j]/sc,0,1);	
 			B[i][j].SetElement((gsigma-1.0)*b[j],1,1);
@@ -82,13 +92,19 @@ bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vecto
 			B[i][j].SetElement(1.0,5,5);
 			B[i][j].SetElement(1.0,6,6);
 
+			C[i][j].Resize(n_);
+			C[i][j].Zeros();  
 			C[i][j].SetElement(ci[i],2); 
 			C[i][j].SetElement(crn[i],3);
 
+			Psi[i][j].Resize(n_,3);
+			Psi[i][j].Zeros();  
 			Psi[i][j].SetElement(gsigmai[i],2,2);
 			Psi[i][j].SetElement(gsigmarn[i],3,0);
 			Psi[i][j].SetElement(gsigmamu[i],4,1);
 			
+			Pi[i][j].Resize(n_,2);
+			Pi[i][j].Zeros();  
 			Pi[i][j].SetElement(1.0,5,0);
 			Pi[i][j].SetElement(1.0,6,1);
 

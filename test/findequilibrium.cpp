@@ -7,8 +7,13 @@
 
 using namespace std; 
 
-int main()
+int main(int argc, char **argv)
 {
+	if (argc < 2)
+	{
+		cerr << "Usage: " << argc << "file-containing-the-data" << enedl; 
+		abort(); 
+	}
 	// prefixed parameters for state equations
 	TDenseVector state_equation_parameter(5);
 	state_equation_parameter.SetElement(1.005, GLAMBDAZ_STATE);	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
@@ -29,7 +34,7 @@ int main()
 	size_t nS = 4; 
 	size_t nL = 1; 
 	size_t nTL = 1; 
-	size_t nFree = 23+6+1; // 23: model parameters; 6=2X3: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 1: probability of staying in ZLB
+	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 
 	// Setting up the CMSSM model
 	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter); 
@@ -42,14 +47,36 @@ int main()
 	ObjectiveFunction_Validation::measurement_equation_parameter = measurement_equation_parameter; 
 	ObjectiveFunction_Validation::transition_prob_parameter = transition_prob_parameter; 
 
-	TDenseVector lb, ub; MakeLbUb_ststm1(lb, ub); 	// Lower and upper bounds 
+	// Lower and upper bounds for x 
+	TDenseVector lb, ub; 
+	if ( MakeLbUb_ststm1(lb, ub, nFree) ) 	
+	{
+		cerr << "------ Error occurred when setting the lower and upper bounds of the parameter ------\n";
+		abort(); 
+	}
+
+	// Find valid starting value for x
 	TDenseVector x0(nFree);  x0.RandomNormal(nFree); // Initial guess of x
 	TDenseVector function_value; 			// To hold function values of all max_count searches
 	size_t max_count = 500; 
 	if ( model.ValidInitialPoint(function_value, x0, max_count, lb, ub) )
 	{
-		cerr << "------ Attempting to find valid initial point for estimation: no equilibrium exists ----------" << endl; 
+		cerr << "------ Attempting to find valid initial point for estimation: no equilibrium exists ------" << endl; 
 		abort(); 
 	}
-
+	
+	// Display valid x
+	// Display(model.x); 
+	
+	// Read in data
+	string filename = string(argv[1]);	
+	vector<double> qm_date;		// dates
+	vector<TDenseVector> qdata; 	// variables
+	if (LoadData(qm_date, qdata, filename))
+	{
+		cerr << "------ Error occurred when reading data ------\n"; 
+		abort(); 
+	}
+	size_t nSample = qdata.size(); 	// total sample size
+	size_t nY = qdata[0].dim;		// number of observables
 }

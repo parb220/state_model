@@ -3,6 +3,6 @@
 
 #include "dw_dense_matrix.hpp"
 
-void MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, int choice=1);
+bool MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice=1);
 
 #endif

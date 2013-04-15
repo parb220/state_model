@@ -25,8 +25,8 @@ USE_DW = USE_DW
   #USE_DW_SWITCH = USE_DW_SWITCH
   #USE_DW_STATE_SPACE = USE_DW_STATE_SPACE
 USE_MKL = USE_MKL
-USE_NPSOL = USE_NPSOL 
-USE_FORTRAN = USE_FORTRAN
+#USE_NPSOL = USE_NPSOL 
+#USE_FORTRAN = USE_FORTRAN
 #USE_ATLAS = USE_ATLAS
 #USE_IMSL = USE_IMSL
 #USE_LAPACK = USE_LAPACK
@@ -34,7 +34,7 @@ USE_FORTRAN = USE_FORTRAN
 #USE_PTHREAD = USE_PTHREAD
 USE_MATH = USE_MATH
 USE_GSL = USE_GSL
-#USE_GSL_CBLAS = USE_GSL_CBLAS
+USE_GSL_CBLAS = USE_GSL_CBLAS
 #USE_BOOST = USE_BOOST
 #USE_MYSQL_CPP_CONN = USE_MYSQL_CPP_CONN
 #USE_LOG4CXX = USE_LOG4CXX
@@ -44,19 +44,17 @@ BASE_DIR = $(HOME)/DW_TZ_GIT
 CC = gcc
 CPP = g++
 CFLAGS = -g
-#CFLAGS = -O3 -DSTRUCTURED_COLUMN_MAJOR -Wall -Wno-parentheses
-#CFLAGS = -g -static -DSTRUCTURED_COLUMN_MAJOR -Wall -Wno-parentheses
-#CFLAGS = -static -DSTRUCTURED_COLUMN_MAJOR -Wall -Wno-parentheses -O3
-#CFLAGS = -g -static
-#CFLAGS =  -DSTRUCTURED_COLUMN_MAJOR -Wall -Wno-parentheses
 
 MAKEFILE_DIR = $(BASE_DIR)/projects_dw
 
 include $(MAKEFILE_DIR)/make_machines_master
 include $(MAKEFILE_DIR)/make_libraries_master
 
-#LIBS_DIR := $(LIBS_DIR) -L$(NPSOL_LIB) 
-#LIBS := $(LIBS) -lnpsol_f77 -llssol_f77 -lgfortran
+NPSOL_LIB = $(HOME)/npsol/Linux-x86_64/debugged/lib
+LIBS_DIR := $(LIBS_DIR) -L$(NPSOL_LIB) 
+LIBS := $(LIBS) -lnpsol_f77 -llssol_f77 -lgfortran
+LIBS := $(LIBS) -lstdc++ -lpthread
+
 #################################################################################
 # PROJECT PATHS
 MATH_INCLUDE_DIR = $(BASE_DIR)/utilities_dw/include
@@ -84,12 +82,12 @@ TEST_EFILE = $(EXE_DIR)/findequilibrium
 
 
 #################################################################################
-all : TEST_EXEC
+all : CMSSM_TEST 
 
-TEST_EXEC : $(TEST_EFILE)
+CMSSM_TEST : $(TEST_EFILE)
 
 $(TEST_EFILE): $(MATRIX_OBJS) $(GENERIC_OBJS) $(TEST_OBJS)
-	$(CPP) $(CFLAGS) $^ $(LIBS_DIR) $(LIBS) -lpthread -o $(TEST_EFILE)
+	$(CPP) $(CFLAGS) $^ $(LIBS_DIR) $(LIBS) -o $(TEST_EFILE)
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCLUDE_DIR) -c $< -o $(BUILD_DIR)/$@
@@ -102,13 +100,10 @@ clean:
 	rm -f $(BUILD_DIR)/*.o
 #
 #################################################################################
-test:
+display:
 	echo "EXE_DIR: $(EXE_DIR)"
 	echo "BUILD_DIR: $(BUILD_DIR)"
 	echo "VPATH: $(VPATH)"
 	echo "INCLUDE_DIR: $(INCLUDE_DIR)"
 	echo "LIBS_DIR: $(LIBS_DIR)"
-	echo "OBJS: $(OBJS)"
-	echo "TEST_OBJS: $(TEST_OBJS)"
-	echo "CC: $(CC)"
-	echo "MKL_LIBS: $(MKL_LIBS)"
+	echo "LIBS: $(LIBS)"

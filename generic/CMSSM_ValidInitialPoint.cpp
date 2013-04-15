@@ -18,47 +18,44 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 {
 	double error_return = 1.0e10;
 	vector<vector<TDenseMatrix> > A, B, Psi, Pi; 
-	vector<vector<TDenseVector> > C;  
-	TDenseVector x_vector(x, *n); 
+	vector<vector<TDenseVector> > C; 
+	// Make a TDenseVector object, x_vector, to copy the content of x 
+	TDenseVector x_vector(*n); 
+	for (unsigned int i=0; i<*n; i++)
+		x_vector.SetElement(x[i], i); 
 
 	bool gensys_err = ABPsiPiC_function->convert(A,B,Psi,Pi,C,x_vector,state_equation_parameter);
 	if (gensys_err)
-	{
 		*f = error_return;
-		return NULL; 
-	} 
- 
-	size_t nZ = A[0][0].rows; 
-	size_t nExpectation = Pi[0][0].cols; 
-	TDenseMatrix V0a; 
-	vector<double> E0a; 
-	Annihilator(V0a, E0a, LeftSolve(A[0][0], B[0][0]) ); 
-	if (V0a.rows != nExpectation) 
-	{
-		*f = error_return; 
-		return NULL; 
-	}
-	if (Rank(V0a*LeftSolve(A[0][0],Pi[0][0]) ) != nExpectation)
-	{
-		*f = error_return; 
-		return NULL; 
-	}
+	else 
+	{ 
+		size_t nZ = A[0][0].rows; 
+		size_t nExpectation = Pi[0][0].cols; 
+		TDenseMatrix V0a; 
+		vector<double> E0a; 
+		Annihilator(V0a, E0a, LeftSolve(A[0][0], B[0][0]) ); 
+		if (V0a.rows != nExpectation) 
+			*f = error_return; 
+		else if (Rank(V0a*LeftSolve(A[0][0],Pi[0][0]) ) != nExpectation)
+			*f = error_return; 
+		else 
+		{
+			vector<double>a(2); 
+			a[0] = E0a[nZ-nExpectation-1]-1.0; 	// a[0]=E0a[nZ-nExpectation]-1.0; 
+			a[1] = 1.0-E0a[nZ-nExpectation]; 	// a[1]=1.0-E1a[nZ-nExpectation+1]; 
+			vector<double>b(2); 
+			b[0] = a[0] > 0.0 ? a[0] : 0.0; 
+			b[1] = a[1] > 0.0 ? a[1] : 0.0; 
 
-	vector<double>a(2); 
-	a[0] = E0a[nZ-nExpectation-1]-1.0; 	// a[0]=E0a[nZ-nExpectation]-1.0; 
-	a[1] = 1.0-E0a[nZ-nExpectation]; 	// a[1]=1.0-E1a[nZ-nExpectation+1]; 
-	vector<double>b(2); 
-	b[0] = a[0] > 0.0 ? a[0] : 0.0; 
-	b[1] = a[1] > 0.0 ? a[1] : 0.0; 
-
-	*f=b[0]+b[1]; 
-	if (*f <= 0)
-	{
-		*f = a[0] > a[1] ? a[0] : a[1]; 
-		if (*f < -0.2)
-			*f = -0.2; 
+			*f=b[0]+b[1]; 
+			if (*f <= 0)
+			{
+				*f = a[0] > a[1] ? a[0] : a[1]; 
+				if (*f < -0.2)
+					*f = -0.2; 
+			}
+		}
 	}
-	return NULL; 
 }
 
 bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t max_count, TDenseVector &lb, TDenseVector &ub)
@@ -135,7 +132,7 @@ bool CMSSM::ValidInitialPoint(TDenseVector &fval, const TDenseVector &x0, size_t
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
 		fval.SetElement(f, count); 
-		if (inform == 0 && fval[count] < TOLERANCE) 
+		if (inform == 0 && fval[count] < TOLERANCE )
 			error = false; 
 		else 
 		{

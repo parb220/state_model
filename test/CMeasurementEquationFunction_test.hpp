@@ -7,10 +7,10 @@
 class MeasurementEquationFunction_test : public MeasurementEquationFunction
 {
 public:
-	virtual bool convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x, const TDenseVector &free_parameter);
+	virtual bool convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &free_parameter, const TDenseVector &input_x);
 };
 
-bool MeasurementEquationFunction_test::convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x, const TDenseVector &free_parameter)
+bool MeasurementEquationFunction_test::convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &free_parameter, const TDenseVector &input_x)
 {
 	for (unsigned int i=0; i<a.size(); i++)
 	{

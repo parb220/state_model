@@ -4,6 +4,7 @@
 #include <vector>
 #include "dw_dense_matrix.hpp"
 
-bool LoadData(vector<double> &, vector<TDenseVector> & , const string &filename);
+using namespace std; 
+bool LoadData(vector<double>&, vector<TDenseVector>& , const string &filename);
 
 #endif;

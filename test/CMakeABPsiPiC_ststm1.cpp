@@ -3,7 +3,7 @@
 
 using namespace std; 
 
-bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x, const TDenseVector &free_parameter)
+bool MakeABPsiPiC_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &free_parameter, const TDenseVector &x)
 // Microfounded NK model with Rotemburg's adjustment costs
 //
 // Return gensys form for state equation: 

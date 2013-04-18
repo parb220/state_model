@@ -3,7 +3,7 @@
 
 using namespace std; 
 
-bool ReadData(vector<double> &qm_date, vector<TDenseVector> &qdata, const string &file_name)
+bool LoadData(vector<double> &qm_date, vector<TDenseVector> &qdata, const string &file_name)
 {
 	ifstream input_file(file_name.c_str()); 
 	if (!input_file)

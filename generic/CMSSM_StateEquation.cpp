@@ -11,13 +11,9 @@ void CMSSM:: ClearStateEquation()
 	V=vector<TDenseMatrix>(0,TDenseMatrix(0,0) ); 
 }
 
-void CMSSM::StateEquation(unsigned int t, const vector<TDenseVector> &y)
-{
-	// nothing should be done yet.
-}
-
-unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
+int CMSSM::SetStateEquationParameter(const TDenseVector &input_x)
 // Return value of error has the following meaning
+// 	-1: state_equation_function not specified
 // 	0: success
 // 	1: some A returned by MakeABPsiPiC is not invertible
 // 	2: p0<=0 or p0>1 or p1<=0 or p1>1
@@ -28,7 +24,10 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 // 	6: V1a*LeftSolve(A[1][1],Pi[1][1]) is not of full row rank
 // 	7: V1a*LeftSolve(A[1][0],Pi[1][0]) is not of full row rank
 {
-	bool gensys_err = function->convert(A,B,Psi,Pi,C,x,state_equation_parameter);
+	if (!state_equation_function)
+		return -1;
+
+	bool gensys_err = state_equation_function->convert(A,B,Psi,Pi,C,state_equation_parameter, input_x);
 	if (gensys_err)
 	{
 		ClearStateEquation(); 	
@@ -36,15 +35,15 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 	}
 
 	// sizes 
+	nZ = A[0][0].rows; 
+	nE = Psi[0][0].cols; 
 	size_t originalNS = 2; 	// NOT equal to nS
 	size_t nR = 6; 
-	size_t nZ = A[0][0].rows; 
-	size_t nE = Psi[0][0].cols; 
 	size_t nExpectation = Pi[0][0].cols; 
 
 	// probability of staying in zero lower bound
-	double p0 = x(x.dim-2);
-	double p1 = x(x.dim-1);
+	double p0 = input_x(input_x.dim-2);
+	double p1 = input_x(input_x.dim-1);
 	if ( (p0<=0) || (p0>1) || (p1<=0) || (p1>1) )
 	{
 		ClearStateEquation(); 
@@ -65,8 +64,7 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] );
 	d[0] = C[0][1] - A[0][1]*c_hat[0] + B[0][1]*c_hat[1]; 
 	d[1] = C[1][0] - A[1][0]*c_hat[1] + B[1][0]*c_hat[0];
-	TDenseMatrix I; 
-	I.Identity(nZ); 
+	TDenseMatrix I; I.Identity(nZ); 
 
 	// Multiply by inverse of A
 	TDenseMatrix A00InvPi00 = LeftSolve(A[0][0], Pi[0][0]); 
@@ -151,21 +149,21 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 
 	// Delta11 = reshape(x(end-1-N11.cols*nE:end-2),N11.cols, nE); 
 	TDenseMatrix Delta11(N11.cols, nE); 
-	unsigned int counter_reshape = x.dim-2-Delta11.rows *Delta11.cols; 
+	unsigned int counter_reshape = input_x.dim-2-Delta11.rows *Delta11.cols; 
 	for (unsigned int i=0; i<Delta11.rows; i++)
 	{
 		for (unsigned int j=0; j<Delta11.cols; j++)
 		{
-			Delta11.SetElement(x(counter_reshape), i,j);
+			Delta11.SetElement(input_x(counter_reshape), i,j);
 			counter_reshape++;
 		}
 	}	
-	// gamma10 = x(end-1-nExpectations*nE-N10.cols:end-2-nExpectations*nE); 
+	// gamma10 = input_x(end-1-nExpectations*nE-N10.cols:end-2-nExpectations*nE); 
 	TDenseVector gamma10(N10.cols); 
-	counter_reshape = x.dim-2-nExpectation*nE-N10.cols; 
+	counter_reshape = input_x.dim-2-nExpectation*nE-N10.cols; 
 	for (unsigned int i=0; i<gamma10.dim; i++)
 	{
-		gamma10.SetElement(x(counter_reshape), i); 
+		gamma10.SetElement(input_x(counter_reshape), i); 
 		counter_reshape ++; 
 	}
 	// G0 = -M10*A10InvPsi10 + N10*Delta11
@@ -272,3 +270,10 @@ unsigned int CMSSM:: StateEquationHelper(MakeABPsiPiC *function)
 
 	return 0; 
 }
+
+
+/* Nothing to do yet */
+void CMSSM::UpdateStateEquationParameter(unsigned int t, const vector<TDenseVector> &y)
+{
+}
+/* Nothing to do yet */

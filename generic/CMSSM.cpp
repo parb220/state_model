@@ -41,7 +41,7 @@ state_equation_function(_sef),
 measurement_equation_function(_mef),
 transition_prob_function(_tpmf)
 {
-	nNu = (size_t)pow(nS, nL); 
+	nNu = (size_t)pow(nS, nL+1); 
 	nXi = (size_t)pow(nS, nTL+1); 
 	nZeta = (size_t)pow(nS, nTL); 
 	

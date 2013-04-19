@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	vector<TDenseVector> qdata; 	// variables
 	if (LoadData(qm_date, qdata, filename))
 	{
-		cerr << "------ Error occurred when reading data ------\n"; 
+		cerr << "------LoadData(): error occurred ------\n"; 
 		abort(); 
 	}
 	size_t nSample = qdata.size(); 	// total sample size
@@ -48,51 +48,39 @@ int main(int argc, char **argv)
 	size_t nS = 4; 
 	size_t nL = 1; 
 	size_t nTL = 1; 
-	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter); 
-	model.state_equation_function = new MakeABPsiPiC_ststm1; 
-	model.measurement_equation_function = new MeasurementEquationFunction_test;  
-	model.transition_prob_function = new CTransitionProbMatrixFunction_Test; 	
+	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, new MakeABPsiPiC_ststm1, new MeasurementEquationFunction_test, new CTransitionProbMatrixFunction_Test); 
 
+	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	/* Find valid starting value: begin */
-	ObjectiveFunction_Validation::ABPsiPiC_function = &function_ABPsiPiC; 
-	ObjectiveFunction_Validation::state_equation_parameter = state_equation_parameter; 
-	ObjectiveFunction_Validation::measurement_equation_parameter = measurement_equation_parameter; 
-	ObjectiveFunction_Validation::transition_prob_parameter = transition_prob_parameter; 
-
 	// Lower and upper bounds for x 
 	TDenseVector lb, ub; 
 	if ( MakeLbUb_ststm1(lb, ub, nFree) ) 	
 	{
-		cerr << "------ Error occurred when setting the lower and upper bounds of the parameter ------\n";
+		cerr << "------MakeLbUb(): error occurred ------\n";
 		abort(); 
 	}
 
 	// Find valid starting value for x
-	TDenseVector x0(nFree);  x0.RandomNormal(nFree); // Initial guess of x
+	TDenseVector x0(nFree), x0Valid(nFree);  
+	x0.RandomNormal(nFree); 			// Initial guess of x
 	TDenseVector function_value; 			// To hold function values of all max_count searches
 	size_t max_count = 500; 
-	if ( model.ValidInitialPoint(function_value, x0, max_count, lb, ub) )
+	int return_code = model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub);
+	if ( return_code < 0 )
 	{
-		cerr << "------ Attempting to find valid initial point for estimation: no equilibrium exists ------" << endl; 
+		cerr << "------CMSSM::ValidInitialPoint(): state equation function, measurement equation function or transition prob function not properly set ------.\n"; 
+		abort();
+	}
+	else if ( return_code > 0)
+	{
+		cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------.\n"; 
 		abort(); 
 	}
-	// Display valid x
-	// Display(model.x); 
+	// Display x0Valid 
+	// Display(x0Valid); 
 	/* Find valid start value: end */
-
-	/* Set up state equation after a legitimate x is found*/
-	// model.nZ and mode.nE should be set here
-	model.StateEquationHelper(&function_ABPsiPiC); 
-	
-	/* Set up measurement equation */
-	if( model.MeasurementEquation(&measurement_function) )
-	{
-		cerr << "Error occurred while setting up measurment equation.\n"; 
-		abort(); 
-	} 
 
 	/* Starts in state one with probability one */
 	TDenseVector initial_prob(model.nXi, 0.0);
@@ -103,21 +91,24 @@ int main(int argc, char **argv)
 	vector<TDenseMatrix> P0(model.nXi, TDenseMatrix(model.nZ, model.nZ) ); 
 	for (unsigned int i=0; i<P0.size(); i++)
 		P0[i].Identity(model.nZ); 	
-	
-	/* Transition probability matrix: */
 
 	/* Maximize log-likelihood */
 	const double MINUS_INFINITY = -1.0e30; 
 	size_t n_tries = 10; 
-	TDenseVector best_solution(model.x.dim+1, 0.0);
+	TDenseVector best_solution(nFree+1, 0.0);
 	best_solution.SetElement(MINUS_INFINITY, 0); 
-	vector<TDenseVector> solutions(n_tries, TDenseVector(model.x.dim+1,0.0) );  
+	vector<TDenseVector> solutions(n_tries, TDenseVector(nFree+1,0.0) );  
 
 	unsigned int i=0, number_bad=0; 
+	bool bad; 
+	double ll;	// log likelihood
+	double mll;	// minus log likelihood
+	TDenseVector xOptimal(nFree); 
+
 	while (i < n_tries && number_bad < 200)
 	{
 		solutions[i].SetElement(MINUS_INFINITY, 0); 
-		bool bad = true; 
+		bad = true; 
 		
 		// Find valid starting value
 		x0.RandomNormal(nFree); 
@@ -129,36 +120,51 @@ int main(int argc, char **argv)
 		max_count = 10; 
 		if ( MakeLbUb_ststm1(lb, ub, nFree) )
         	{
-                	cerr << "------ Error occurred when setting the lower and upper bounds of the parameter ------\n";
-                	bad = true; 
-        	}
-		else if ( model.ValidInitialPoint(function_value, x0, max_count, lb, ub) )
-        	{
-                	cerr << "------ Attempting to find valid initial point for estimation: no equilibrium exists ------" << endl;
+                	cerr << "------ MakeLbUB(): error occurred ------\n";
                 	bad = true; 
         	}
 		else 
 		{
-			// Is likelihood well defined at the initial value
-			double ll = -minus_log_likelihood(qdata, z0, P0, &trans_prob_function, initial_prob, model);
-			
-			// unconstrained optimization
-			
-
-			// save solution
-			double mll = minus_log_likelihood(qdata, z0, P0, &trans_prob_function, initial_prob, model);  
-			ll = -mll; 
-			solutions[i].SetElement(ll, 0); 
-			for (unsigned int j=1; j<solutions[i].dim; j++)
-				solutions[i].SetElement(model.x[j-1], j); 
-
-			if (ll > best_solution[0])
+			return_code =  model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub);
+			if (return_code < 0)
 			{
-				for (unsigned int j=0; j<solutions[i].dim; j++)
-					best_solution.SetElement(solutions[i][j],j); 
+				cerr << "------ CMSSM::ValidInitialPoint(): state equation function, measurement equation function or transition prob function not properly set ------.\n";
+                		bad = true; 
 			}
-			i ++; 
-			bad = false; 
+			else if (return_code > 0)
+        		{
+                		cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------" << endl;
+                		bad = true; 
+        		}
+			else 
+			{
+				// unconstrained minimize minus loglikelihood
+				return_code = model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid);  
+				if (return_code < 0)
+				{
+					cerr << "------ CMSSM::Minimize_MinusLogLikelihood(): state equation function, measurement equation function or transition prob function not properly set ------.\n";
+					bad = true; 
+				}	
+				else if (return_code > 0)
+				{
+					cerr << "------ CMSSM::Minimize_MinusLogLikelihood(): npsol error " << return_code << endl; 
+					bad = true; 
+				}
+				else 
+				{
+					ll = -mll; 
+					solutions[i].SetElement(ll, 0); 
+					for (unsigned int j=1; j<solutions[i].dim; j++)
+						solutions[i].SetElement(xOptimal[j-1], j); 
+					if (ll > best_solution[0])
+					{
+						for (unsigned int j=0; j<solutions[i].dim; j++)
+							best_solution.SetElement(solutions[i][j],j); 
+					}
+					i ++; 
+					bad = false; 
+				}
+			}
 		}
 		if (bad)
 			number_bad ++;

@@ -10,6 +10,8 @@ extern "C"
 
 using namespace std; 
 
+CMSSM *ObjectiveFunction_Validation::model;
+
 void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, double *f, double *g, int *nstate)
 // A return value less than zero means that regime 1 is determinate.
 {

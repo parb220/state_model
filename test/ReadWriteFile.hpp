@@ -7,4 +7,4 @@
 using namespace std; 
 bool LoadData(vector<double>&, vector<TDenseVector>& , const string &filename);
 
-#endif;
+#endif

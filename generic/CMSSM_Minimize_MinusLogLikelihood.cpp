@@ -10,6 +10,12 @@ extern "C"
 
 using namespace std; 
 
+CMSSM *MinusLogLikelihood::model; 
+vector<TDenseVector> MinusLogLikelihood::y; 
+vector<TDenseVector> MinusLogLikelihood::z_0; 
+vector<TDenseMatrix> MinusLogLikelihood::P_0; 
+TDenseVector MinusLogLikelihood::initial_prob; 
+
 void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *f, double *g, int *nstate)
 {
         double minus_log_likelihood=1.0e30;
@@ -51,7 +57,7 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 // Returns
 // 	-1:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	0:	success;
-// 	1:	fail
+// 	>0:	inform code returned by npsol_
 {
 	if (CheckStateMeasurementTransitionEquations() )
 		return -1;

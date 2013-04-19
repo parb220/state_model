@@ -115,14 +115,16 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 	npoptn_((char*)COLD_START.c_str(), COLD_START.length());
 	npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, MinusLogLikelihood::function, &inform, &iter, istate, c, cJac, clambda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
-	error = inform; 
-	if ( inform == 0)
+	if ( inform == 0 || inform == 1)
 	{
+		error = 0; 
 		x_optimal.Resize(n); 
 		for (unsigned int i=0; i<n; i++)
 			x_optimal.SetElement(x_raw[i], i); 
 		minus_log_likelihood_optimal = f; 
 	}
+	else 
+		error = inform; 
 
 	// release memory
 	delete []A; 

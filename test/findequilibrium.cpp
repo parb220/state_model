@@ -62,12 +62,13 @@ int main(int argc, char **argv)
 		abort(); 
 	}
 
-	// Find valid starting value for x
-	TDenseVector x0(nFree), x0Valid(nFree);  
-	x0.RandomNormal(nFree); 			// Initial guess of x
-	TDenseVector function_value; 			// To hold function values of all max_count searches
+	TDenseVector x0(nFree), x0Valid(nFree), function_value;  
 	size_t max_count = 500; 
-	int return_code = model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub);
+	int return_code; 
+
+	/* Find valid starting value for x */
+	x0.RandomNormal(nFree); 			// Initial guess of x
+	return_code = model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub);
 	if ( return_code < 0 )
 	{
 		cerr << "------CMSSM::ValidInitialPoint(): state equation function, measurement equation function or transition prob function not properly set ------.\n"; 

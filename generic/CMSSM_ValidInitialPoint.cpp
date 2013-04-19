@@ -38,13 +38,26 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 			TDenseMatrix V0a; 
 			vector<double> E0a; 
 			Annihilator(V0a, E0a, LeftSolve(A[0][0], B[0][0]) ); 
-			if (V0a.rows != nExpectation) 
+			/*if (V0a.rows != nExpectation) 
 				*f = error_return; 
 			else if (Rank(V0a*LeftSolve(A[0][0],Pi[0][0]) ) != nExpectation)
 				*f = error_return; 
 			else 
-			{
+			{*/
 				vector<double>a(2); 
+				/*
+ * 				E0a: contains absolute eigen values sorted in an ascending order
+ * 				nZ: number of eigen values (dimension of E0a)
+ * 				nExpectation: number of explosible eigen values
+ * 				nZ-nExpectation: number of stable eigen values
+ * 				E0a[0 ... nZ-nExpectation-1]:	stable eigen values
+ * 				E0a[nZ-nExpectation ... nZ-1]:	explosible eigen values
+ * 				a[0]=E0a[nZ-nExpectation-1]-1.0: difference between the smallest stable eigen value and 1, should<0 if everthing else works 
+ * 				a[1]=1.0-E0a[nZ-nExpectation]: difference between the smallest explosible eigen value and 1, should<0 if everthing else works 
+ *				we would like both a[0] and a[1] to be negative, not not too negative (~0.2 should be perfect)
+ *				However, if nExpectation is not 2 due to a particular x, then either a[0] or a[1] will be positive. We would like to avoid 
+ *				this x by letting nposl keep driving *f down. 
+ 				*/
 				a[0] = E0a[nZ-nExpectation-1]-1.0; 	// a[0]=E0a[nZ-nExpectation]-1.0; 
 				a[1] = 1.0-E0a[nZ-nExpectation]; 	// a[1]=1.0-E1a[nZ-nExpectation+1]; 
 				vector<double>b(2); 
@@ -55,10 +68,13 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 				if (*f <= 0)
 				{
 					*f = a[0] > a[1] ? a[0] : a[1]; 
-					if (*f < -0.2)
-						*f = -0.2; 
+					/* The following seggments make the objective function not differentiable
+ * 					if (*f < -0.2)
+ *						*f = -0.2; 
+					*/
+					*f = 2.5*((*f+0.2)*(*f+0.2)-0.04); 
 				}
-			}
+			/*}*/
 		}
 	}	
 }
@@ -138,20 +154,23 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 		bu[i] = ub[i]; 			// Setting upper bound 
 	}
 
-	/*
+ 	ObjectiveFunction_Validation::model = this; 
 	// Below is a revision based on Dan's code
 	// We try a number, max_count, of times and finds the best solution
 	double best_value = 1.0; 
 	double *best_x = new double[n];
 	while (count < max_count)
 	{
-		npoptn_(COLD_START.c_str(), COLD_START.length());
+		npoptn_((char*)COLD_START.c_str(), COLD_START.length());
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw);
 		fval.SetElement(f, count); 
-		if (f < best_value)
+		if (inform == 0 || inform == 1)
 		{
-			best_value = f; 
-			memcpy(best_x, x_raw, sizeof(double)*n); 
+			if (f < best_value)
+			{
+				best_value = f; 
+				memcpy(best_x, x_raw, sizeof(double)*n); 
+			}
 		}
 		for (unsigned int i=0; i<x0.dim; i++)
 		{
@@ -181,22 +200,22 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 	if (best_value < TOLERANCE)
 	{
 		cout << "best_value "<< best_value << endl; 
-		error = false; 
+		error = 0; 
 		memcpy(x_raw, best_x, sizeof(double)*n); 
 	}
 	else
-		error = true; 
-	delete [] best_x;  */
+		error = 1; 
+	delete [] best_x; 
 	
- 	// Below is almost the exact copy of Dan's code
- 	ObjectiveFunction_Validation::model = this; 
+ 	/* Below is almost the exact copy of Dan's code
 	while (error && count < max_count)
 	{
 		npoptn_((char*)COLD_START.c_str(), COLD_START.length()); 
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
 		fval.SetElement(f, count); 
-		if (inform == 0 && fval[count] < TOLERANCE )
+		if (fval[count] < TOLERANCE)
+		// if (inform == 0 && fval[count] < TOLERANCE )
 			error = 0; 
 		else 
 		{
@@ -225,7 +244,7 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 			}
 			count ++; 
 		}
-	}
+	} */
 	if (error == 0)
 	{	
 		x_optimal.Resize(x0.dim); 

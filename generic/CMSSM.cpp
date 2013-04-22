@@ -14,20 +14,20 @@ state_equation_function(NULL),
 measurement_equation_function(NULL),
 transition_prob_function(NULL)
 {
-	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );   
-        B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );   
-        C = vector<vector<TDenseVector> >(0,vector<TDenseVector>(0,TDenseVector() ) ); 
-        Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );   
-        Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );
+	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );   
+        B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );   
+        C = vector<vector<TDenseVector> >(0,vector<TDenseVector>(0) ); 
+        Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );   
+        Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );
 	
-	a = vector<TDenseVector>(0, TDenseVector());
-        H = vector<TDenseMatrix>(0, TDenseMatrix());
-        Phi_u = vector<TDenseMatrix>(0, TDenseMatrix());
-        R = vector<TDenseMatrix>(0, TDenseMatrix());
-        b = vector<TDenseVector>(0, TDenseVector());
-        F = vector<TDenseMatrix>(0, TDenseMatrix());
-        Phi_e = vector<TDenseMatrix>(0, TDenseMatrix());
-        V = vector<TDenseMatrix>(0, TDenseMatrix());
+	a = vector<TDenseVector>(0);
+        H = vector<TDenseMatrix>(0);
+        Phi_u = vector<TDenseMatrix>(0);
+        R = vector<TDenseMatrix>(0);
+        b = vector<TDenseVector>(0);
+        F = vector<TDenseMatrix>(0);
+        Phi_e = vector<TDenseMatrix>(0);
+        V = vector<TDenseMatrix>(0);
 }
 
 
@@ -45,20 +45,20 @@ transition_prob_function(_tpmf)
 	nXi = (size_t)pow(nS, nTL+1); 
 	nZeta = (size_t)pow(nS, nTL); 
 	
-	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) ); 
-	B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) ); 
-	C = vector<vector<TDenseVector> >(0,vector<TDenseVector>(0,TDenseVector() ) ); 
-	Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) ); 
-	Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0,TDenseMatrix() ) );
+	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) ); 
+	B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) ); 
+	C = vector<vector<TDenseVector> >(0,vector<TDenseVector>(0) ); 
+	Psi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) ); 
+	Pi = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );
 
-        a = vector<TDenseVector>(nNu, TDenseVector());
-        H = vector<TDenseMatrix>(nNu, TDenseMatrix());
-        Phi_u = vector<TDenseMatrix>(nNu, TDenseMatrix());
-        R = vector<TDenseMatrix>(nNu, TDenseMatrix());
-        b = vector<TDenseVector>(nNu, TDenseVector());
-        F = vector<TDenseMatrix>(nNu, TDenseMatrix());
-        Phi_e = vector<TDenseMatrix>(nNu, TDenseMatrix());
-        V = vector<TDenseMatrix>(nNu, TDenseMatrix());
+        a = vector<TDenseVector>(nNu);
+        H = vector<TDenseMatrix>(nNu);
+        Phi_u = vector<TDenseMatrix>(nNu);
+        R = vector<TDenseMatrix>(nNu);
+        b = vector<TDenseVector>(nNu);
+        F = vector<TDenseMatrix>(nNu);
+        Phi_e = vector<TDenseMatrix>(nNu);
+        V = vector<TDenseMatrix>(nNu);
 }
 
 CMSSM::CMSSM(const CMSSM &right) :

@@ -71,19 +71,41 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 	// R already calculated in the measurement equations	
 	
 	// output values
-	z_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi,TDenseVector(nZ,0.0) ) );  
-	P_tm1 = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi,TDenseMatrix(nZ,nZ,0.0) ) );
-	p_tm1 = vector<TDenseVector> (T,TDenseVector(nXi,0.0) ); 
+	z_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi) );  
+	P_tm1 = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi) );
+	p_tm1 = vector<TDenseVector> (T); 
 
 	// intermediate values
-	vector<vector<TDenseVector> > z_t = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi,TDenseVector(nZ,0.0) ) ); 
-	vector<vector<TDenseMatrix> > P_t = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi,TDenseMatrix(nZ,nZ,0.0) ) );  
-	vector<vector<TDenseMatrix> > N_tm1 = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi,TDenseMatrix(nY,nY,0.0) ) ); 
-	vector<vector<TDenseVector> > ey_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi,TDenseVector(nY,0.0) ) ); 
-	vector<vector<TDenseVector> > Iz_t = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nZeta,TDenseVector(nZ,0.0) ) ); 
-	vector<vector<TDenseMatrix> > IP_t = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nZeta,TDenseMatrix(nZ,nZ,0.0) ) ); 
-	vector<TDenseVector > p_t = vector<TDenseVector >(T,TDenseVector(nXi,0.0) ); 
-	vector<vector<double> >log_conditional_likelihood = vector<vector<double> >(T,vector<double>(nXi,0.0) ); 	
+	vector<vector<TDenseVector> > z_t = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi) ); 
+	vector<vector<TDenseMatrix> > P_t = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi) );  
+	vector<vector<TDenseMatrix> > N_tm1 = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nXi ) ); 
+	vector<vector<TDenseVector> > ey_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi ) ); 
+	vector<vector<TDenseVector> > Iz_t = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nZeta ) ); 
+	vector<vector<TDenseMatrix> > IP_t = vector<vector<TDenseMatrix> >(T,vector<TDenseMatrix>(nZeta) ); 
+	vector<TDenseVector > p_t = vector<TDenseVector >(T); 
+	vector<TDenseVector > log_conditional_likelihood = vector<TDenseVector>(T); 	
+
+
+	for (unsigned int t=0; t<T; t++)
+	{
+		for (unsigned int i=0; i<nXi; i++)
+		{
+			z_tm1[t][i] = TDenseVector(nZ,0.0); 
+			P_tm1[t][i] = TDenseMatrix(nZ,nZ,0.0); 
+			z_t[t][i] = TDenseVector(nZ,0.0); 
+			P_t[t][i] = TDenseMatrix(nZ,nZ,0.0); 
+			N_tm1[t][i] = TDenseMatrix(nY,nY,0.0); 
+			ey_tm1[t][i] = TDenseVector(nY,0.0); 
+		}
+		for (unsigned int i=0; i<nZeta; i++)
+		{
+			Iz_t[t][i] = TDenseVector(nZ,0.0); 
+			IP_t[t][i] = TDenseMatrix(nZ,nZ,0.0); 
+		}
+		p_tm1[t] = TDenseVector(nXi,0.0); 
+		p_t[t] = TDenseVector(nXi,0.0); 
+		log_conditional_likelihood[t] = TDenseVector(nXi,0.0); 
+	}
 
 	// initialization
 	for (unsigned int i=0; i<nXi; i++)
@@ -191,13 +213,13 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 							catch (...)
 							{
 								OK_t[t][xi] = false; 
-								log_conditional_likelihood[t][xi] = MINUS_INFINITY; 
-								throw dw_exception("Error occurred in LeftSolve()"); 
+								log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
+								// throw dw_exception("Error occurred in LeftSolve()"); 
 							}
-							log_conditional_likelihood[t][xi] = CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],tempV));
+							log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],tempV)), xi);
 							// computes z_t[t][xi] and P[t][xi]
-							z_t[t][xi].Add(z_tm1[t][xi], K*tempV); 
-							P_t[t][xi].Subtract(P_tm1[t][xi], K*LeftSolve(N_tm1[t][xi],Transpose(K) ) ); 
+							z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
+							P_t[t][xi].Subtract(P_tm1[t][xi], K*LeftSolve(N_tm1[t][xi],Transpose(K)) ); 
 							// force symmetry
 							P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
 							OK_t[t][xi] = true; 
@@ -205,7 +227,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 						else 
 						{
 							OK_t[t][xi] = false; 
-							log_conditional_likelihood[t][xi] = MINUS_INFINITY; 
+							log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
 						}
 					}
 				}
@@ -214,7 +236,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 					for (unsigned int s=0; s<nS; s++)
 					{
 						unsigned int xi = s + nS*zeta; 
-						log_conditional_likelihood[t][xi] = MINUS_INFINITY; 
+						log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
 					}
 				}
 			}

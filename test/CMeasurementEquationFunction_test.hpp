@@ -14,7 +14,7 @@ bool MeasurementEquationFunction_test::convert(vector<TDenseVector> &a, vector<T
 {
 	for (unsigned int i=0; i<a.size(); i++)
 	{
-		a[i].Zeros(4); 
+		a[i].Zeros(3); 
 		a[i].SetElement(free_parameter[GPISTAR_MEASUREMENT],1);	// free_parameter[0]: gpistar
 
 		H[i].Zeros(3,7); 

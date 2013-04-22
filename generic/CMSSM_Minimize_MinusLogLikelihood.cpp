@@ -56,8 +56,7 @@ void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *
 int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
 // Returns
 // 	-1:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
-// 	0:	success;
-// 	>0:	inform code returned by npsol_
+// 	>=0:	inform code returned by npsol_
 {
 	if (CheckStateMeasurementTransitionEquations() )
 		return -1;
@@ -115,16 +114,11 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 	npoptn_((char*)COLD_START.c_str(), COLD_START.length());
 	npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, MinusLogLikelihood::function, &inform, &iter, istate, c, cJac, clambda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
-	if ( inform == 0 || inform == 1)
-	{
-		error = 0; 
-		x_optimal.Resize(n); 
-		for (unsigned int i=0; i<n; i++)
-			x_optimal.SetElement(x_raw[i], i); 
-		minus_log_likelihood_optimal = f; 
-	}
-	else 
-		error = inform; 
+	x_optimal.Resize(n); 
+	for (unsigned int i=0; i<n; i++)
+		x_optimal.SetElement(x_raw[i], i); 
+	minus_log_likelihood_optimal = f; 
+	error = inform; 
 
 	// release memory
 	delete []A; 

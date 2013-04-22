@@ -5,10 +5,10 @@ using namespace std;
 
 void CMSSM:: ClearStateEquation()
 {
-	b=vector<TDenseVector>(0,TDenseVector(0) ); 
-	F=vector<TDenseMatrix>(0,TDenseMatrix(0,0) ); 
-	Phi_e=vector<TDenseMatrix>(0,TDenseMatrix(0,0) ); 
-	V=vector<TDenseMatrix>(0,TDenseMatrix(0,0) ); 
+	b=vector<TDenseVector>(0); 
+	F=vector<TDenseMatrix>(0); 
+	Phi_e=vector<TDenseMatrix>(0); 
+	V=vector<TDenseMatrix>(0); 
 }
 
 int CMSSM::SetStateEquationParameter(const TDenseVector &input_x)
@@ -51,17 +51,30 @@ int CMSSM::SetStateEquationParameter(const TDenseVector &input_x)
 	}  		
 
 	//intermediate_b, intermediate_F, intermediate_Phi_e, and intermediate_V
-	vector<TDenseVector> intermediate_b(nR,TDenseVector(nZ,0.0) ); 
-	vector<TDenseMatrix> intermediate_F(nR,TDenseMatrix(nZ,nZ,0.0) );
-	vector<TDenseMatrix> intermediate_Phi_e(nR,TDenseMatrix(nZ,nE,0.0) ); 
-	vector<TDenseMatrix> intermediate_V(nR,TDenseMatrix(nZ,nZ,0.0) );
+	vector<TDenseVector> intermediate_b(nR); 
+	vector<TDenseMatrix> intermediate_F(nR);
+	vector<TDenseMatrix> intermediate_Phi_e(nR); 
+	vector<TDenseMatrix> intermediate_V(nR);
+	for (unsigned int i=0; i<nR; i++)
+	{
+		intermediate_b[i] = TDenseVector(nZ,0.0); 
+		intermediate_F[i] = TDenseMatrix(nZ,nZ,0.0); 
+		intermediate_Phi_e[i] = TDenseMatrix(nZ,nE,0.0); 
+		intermediate_V[i] = TDenseMatrix(nZ,nZ,0.0); 
+	}
 
 	// c_hat, d, and I
-	vector<TDenseVector>c_hat(originalNS,TDenseVector(nZ,0.0) ); 
-	vector<TDenseVector>d(originalNS,TDenseVector(nZ,0.0));
+	vector<TDenseVector>c_hat(originalNS); 
+	vector<TDenseVector>d(originalNS);
+	for (unsigned int i=0; i<originalNS; i++)
+	{
+		c_hat[i] = TDenseVector(nZ,0.0); 
+		d[i] = TDenseVector(nZ,0.0);
+	}
 
 	c_hat[0] = LeftSolve( (A[0][0]-B[0][0]), C[0][0] ); 
-	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] );
+	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] ); 
+
 	d[0] = C[0][1] - A[0][1]*c_hat[0] + B[0][1]*c_hat[1]; 
 	d[1] = C[1][0] - A[1][0]*c_hat[1] + B[1][0]*c_hat[0];
 	TDenseMatrix I; I.Identity(nZ); 
@@ -84,7 +97,7 @@ int CMSSM::SetStateEquationParameter(const TDenseVector &input_x)
 
 	// Annihilators
 	TDenseMatrix V0a, V1a; 
-	vector<double> E0a, E1a; 
+	TDenseVector E0a, E1a; 
 	Annihilator(V0a, E0a, A00InvB00); 
 	Annihilator(V1a, E1a, A11InvB11);
 
@@ -215,10 +228,17 @@ int CMSSM::SetStateEquationParameter(const TDenseVector &input_x)
 	}
 
 	// Form solution 
-	b = vector<TDenseVector>(nNu,TDenseVector(nZ,0.0) ); 
-	F = vector<TDenseMatrix>(nNu,TDenseMatrix(nZ,nZ,0.0) ); 
-	Phi_e = vector<TDenseMatrix>(nNu,TDenseMatrix(nZ,nE,0.0) ); 
-	V = vector<TDenseMatrix>(nNu,TDenseMatrix(nZ,nZ,0.0) ); 
+	b = vector<TDenseVector>(nNu); 
+	F = vector<TDenseMatrix>(nNu); 
+	Phi_e = vector<TDenseMatrix>(nNu); 
+	V = vector<TDenseMatrix>(nNu); 
+	for (unsigned int i=0; i<nNu; i++)
+	{
+		b[i] = TDenseVector(nZ,0.0); 
+		F[i] = TDenseMatrix(nZ,nZ,0.0); 
+		Phi_e[i] = TDenseMatrix(nZ,nE,0.0); 
+		V[i] = TDenseMatrix(nZ,nZ,0.0); 
+	}
 
 	// 0 <==> 0
 	b[0] = intermediate_b[0]; 

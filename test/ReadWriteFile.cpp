@@ -3,7 +3,7 @@
 
 using namespace std; 
 
-bool LoadData(vector<double> &qm_date, vector<TDenseVector> &qdata, const string &file_name)
+bool LoadData(TDenseVector &qm_date, vector<TDenseVector> &qdata, const string &file_name)
 {
 	ifstream input_file(file_name.c_str()); 
 	if (!input_file)
@@ -13,12 +13,14 @@ bool LoadData(vector<double> &qm_date, vector<TDenseVector> &qdata, const string
 	if (nSample <=0 || nDim <= 1)	// should at least contain 1 record
 		return true; 		// and each record should as least has 2 fields
 					// (date and data)
-	qm_date.resize(nSample); 
-	qdata = vector<TDenseVector>(nSample,TDenseVector(nDim-1,0.0)); 	
+	qm_date.Resize(nSample); 
+	qdata.resize(nSample); 
 	double field; 
 	for (unsigned int i=0; i<nSample; i++)
 	{
-		input_file >> qm_date[i]; 
+		input_file >> field; 
+		qm_date.SetElement(field, i);
+		qdata[i].Resize(nDim-1); 
 		for (unsigned int j=0; j<nDim-1; j++)
 		{
 			input_file >> field; 

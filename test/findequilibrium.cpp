@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
 	/* Read in data: begin */
 	string filename = string(argv[1]);	
-	vector<double> qm_date;		// dates
+	TDenseVector qm_date;		// dates
 	vector<TDenseVector> qdata; 	// variables
 	if (LoadData(qm_date, qdata, filename))
 	{
@@ -62,11 +62,10 @@ int main(int argc, char **argv)
 		abort(); 
 	}
 
+	/* Find valid starting value for x */
 	TDenseVector x0(nFree), x0Valid(nFree), function_value;  
 	size_t max_count = 500; 
 	int return_code; 
-
-	/* Find valid starting value for x */
 	x0.RandomNormal(nFree); 			// Initial guess of x
 	return_code = model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub);
 	if ( return_code < 0 )
@@ -79,6 +78,9 @@ int main(int argc, char **argv)
 		cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------.\n"; 
 		abort(); 
 	}
+	// To properly set values of nZ, nE, nY and nU
+	model.SetStateEquationParameter(x0Valid); 
+	model.SetMeasurementEquationParameter(x0Valid); 
 	// Display x0Valid 
 	// Display(x0Valid); 
 	/* Find valid start value: end */
@@ -88,17 +90,22 @@ int main(int argc, char **argv)
 	initial_prob.SetElement(1.0, 0); 
 	 
 	/* Initial values for initial Kalman filter */
-	vector<TDenseVector> z0(model.nXi, TDenseVector(model.nZ,0.0) );
-	vector<TDenseMatrix> P0(model.nXi, TDenseMatrix(model.nZ, model.nZ) ); 
-	for (unsigned int i=0; i<P0.size(); i++)
-		P0[i].Identity(model.nZ); 	
+	vector<TDenseVector> z0(model.nXi);
+	vector<TDenseMatrix> P0(model.nXi); 
+	for (unsigned int i=0; i<model.nXi; i++)
+	{
+		z0[i].Zeros(model.nZ); 
+		P0[i].Identity(model.nZ);
+	}
 
 	/* Maximize log-likelihood */
 	const double MINUS_INFINITY = -1.0e30; 
 	size_t n_tries = 10; 
 	TDenseVector best_solution(nFree+1, 0.0);
 	best_solution.SetElement(MINUS_INFINITY, 0); 
-	vector<TDenseVector> solutions(n_tries, TDenseVector(nFree+1,0.0) );  
+	vector<TDenseVector> solutions(n_tries);  
+	for (unsigned int i=0; i<n_tries; i++)
+		solutions[i] = TDenseVector(nFree+1,0.0); 
 
 	unsigned int i=0, number_bad=0; 
 	bool bad; 
@@ -132,11 +139,6 @@ int main(int argc, char **argv)
 				cerr << "------ CMSSM::ValidInitialPoint(): state equation function, measurement equation function or transition prob function not properly set ------.\n";
                 		bad = true; 
 			}
-			else if (return_code > 0)
-        		{
-                		cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------" << endl;
-                		bad = true; 
-        		}
 			else 
 			{
 				// unconstrained minimize minus loglikelihood
@@ -146,11 +148,6 @@ int main(int argc, char **argv)
 					cerr << "------ CMSSM::Minimize_MinusLogLikelihood(): state equation function, measurement equation function or transition prob function not properly set ------.\n";
 					bad = true; 
 				}	
-				else if (return_code > 0)
-				{
-					cerr << "------ CMSSM::Minimize_MinusLogLikelihood(): npsol error " << return_code << endl; 
-					bad = true; 
-				}
 				else 
 				{
 					ll = -mll; 
@@ -170,4 +167,5 @@ int main(int argc, char **argv)
 		if (bad)
 			number_bad ++;
 	}
+	cout << "best solution " << best_solution << endl; 
 }

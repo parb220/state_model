@@ -10,7 +10,14 @@ extern "C"
 
 using namespace std; 
 
-CMSSM *ObjectiveFunction_Validation::model;
+class ObjectiveFunction_Validation
+{
+public:
+        static CMSSM *model;
+        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
+};
+
+CMSSM *ObjectiveFunction_Validation::model; 
 
 void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, double *f, double *g, int *nstate)
 // A return value less than zero means that regime 1 is determinate.
@@ -28,7 +35,7 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 		for (unsigned int i=0; i<*n; i++)
 			x_vector.SetElement(x[i], i); 
 
-		bool gensys_err = model->state_equation_function->convert(A,B,Psi,Pi,C,model->state_equation_parameter, x_vector);
+		int gensys_err = model->rational_expectation_function->convert(A,B,Psi,Pi,C,model->state_equation_parameter, x_vector);
 		if (gensys_err)
 			*f = error_return;
 		else 
@@ -72,7 +79,7 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 	}	
 }
 
-int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const TDenseVector &x0, size_t max_count, TDenseVector &lb, TDenseVector &ub)
+int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const TDenseVector &x0, size_t max_count, const TDenseVector &lower_bound, const TDenseVector &upper_bound)
 // Tries to find an x that is an valid initial point
 //
 // Return value 
@@ -84,26 +91,13 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 // 	x:	valid initial point if successful
 // 	fval:	vector of objective function values. A value <0 means that a determinate solution in regime 1 has been found
 {
-	if (CheckStateMeasurementTransitionEquations()) 
+	if (CheckModelFunctions()) 
 		return -1; 
 
 	int error = 1;
 	const double INFINITE_BOUND = 1.0E20; 
 	const double TOLERANCE = 0.0; 
 	const string COLD_START = string("Cold Start"); 
-
-	if (lb.dim != x0.dim)
-		lb = TDenseVector(-INFINITE_BOUND, x0.dim); 
-	if (ub.dim != x0.dim)
-		ub = TDenseVector(INFINITE_BOUND, x0.dim); 
-
-	for (unsigned int i=0; i<2; i++)
-	{
-		if (lb[lb.dim-i-1] < 1.0e-3)
-			lb.SetElement(1.0e-3, lb.dim-i-1); 
-		if (ub[ub.dim-i-1] > 1.0) 
-			ub.SetElement(1.0, ub.dim-i-1); 
-	}
 
 	fval = TDenseVector(max_count, 0.0); 
 	unsigned int count = 0; 
@@ -141,11 +135,21 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 	// =================================
 	
 	memcpy(x_raw, x0.vector, sizeof(double)*n); 
+	// lower and upper bounds
 	for (unsigned int i=0; i<n; i++)
 	{
-		bl[i] = lb[i];			// Setting lower bound  
-		bu[i] = ub[i]; 			// Setting upper bound 
+		bl[i] = lower_bound.dim > i ? lower_bound[i] : -INFINITE_BOUND; 
+		bu[i] = upper_bound.dim > i ? upper_bound[i] : INFINITE_BOUND;  
 	}
+	// since the last 2 parameters correspond to probabilites
+	for (unsigned int i=n-1; i>=n-2; i--)
+        {
+                if (bl[i] < 1.0e-3)
+			bl[i] = 1.0e-3; 
+		if (bu[i] > 1.0)
+                        bu[i] = 1.0; 
+        }
+
 
  	ObjectiveFunction_Validation::model = this; 
 	// Below is a revision based on Dan's code
@@ -164,22 +168,22 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 		}
 		for (unsigned int i=0; i<x0.dim; i++)
 		{
-                	if (lb[i] > -INFINITE_BOUND)
+                	if (bl[i] > -INFINITE_BOUND)
                 	{
-                		if (ub[i] < INFINITE_BOUND )
-                			x_raw[i] = (ub[i]-lb[i])*dw_uniform_rnd() + lb[i]; 
+                		if (bu[i] < INFINITE_BOUND )
+                			x_raw[i] = (bu[i]-bl[i])*dw_uniform_rnd() + bl[i]; 
                 		else 
                 		{
                 			double grn_1 = dw_gaussian_rnd(), grn_2 = dw_gaussian_rnd(); 
-                			x_raw[i] = (grn_1*grn_1 + grn_2*grn_2) + lb[i]; 
+                			x_raw[i] = (grn_1*grn_1 + grn_2*grn_2) + bl[i]; 
                 		}
                 	}
                 	else 
                 	{
-                		if (ub[i] < INFINITE_BOUND) 
+                		if (bu[i] < INFINITE_BOUND) 
                 		{
                 			double grn_1 = dw_gaussian_rnd(), grn_2 = dw_gaussian_rnd(); 
-                			x_raw[i] = ub[i] - (grn_1*grn_1 + grn_2*grn_2); 
+                			x_raw[i] = bu[i] - (grn_1*grn_1 + grn_2*grn_2); 
                 		}
                 		else 
                 			x_raw[i] = dw_gaussian_rnd(); 
@@ -209,22 +213,22 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 		{
 			for (unsigned int i=0; i<x0.dim; i++)
 			{
-				if (lb[i] > -INFINITE_BOUND)
+				if (bl[i] > -INFINITE_BOUND)
 				{
-					if (ub[i] < INFINITE_BOUND )
-						x_raw[i] = (ub[i]-lb[i])*dw_uniform_rnd() + lb[i]; 
+					if (bu[i] < INFINITE_BOUND )
+						x_raw[i] = (bu[i]-bl[i])*dw_uniform_rnd() + bl[i]; 
 					else 
 					{
 						double grn_1 = dw_gaussian_rnd(), grn_2 = dw_gaussian_rnd(); 
-						x_raw[i] = (grn_1*grn_1 + grn_2*grn_2) + lb[i]; 
+						x_raw[i] = (grn_1*grn_1 + grn_2*grn_2) + bl[i]; 
 					}
 				}
 				else 
 				{
-					if (ub[i] < INFINITE_BOUND) 
+					if (bu[i] < INFINITE_BOUND) 
 					{
 						double grn_1 = dw_gaussian_rnd(), grn_2 = dw_gaussian_rnd(); 
-						x_raw[i] = ub[i] - (grn_1*grn_1 + grn_2*grn_2); 
+						x_raw[i] = bu[i] - (grn_1*grn_1 + grn_2*grn_2); 
 					}
 					else 
 						x_raw[i] = dw_gaussian_rnd(); 

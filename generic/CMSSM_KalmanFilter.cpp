@@ -53,10 +53,10 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 // 	T:	y.size(), number of time points for which measurments are available
 {
 	// Get state space parameters
-	if (CheckStateMeasurementTransitionEquations()) 
+	if (CheckModelFunctions()) 
 		return -1; 
 
-	UpdateStateEquationParameter(0,y); 
+	UpdateStateModelParameters(0,y,x); 
 	
 	int error_code=0;	// to be returned;
 
@@ -264,7 +264,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 		// End Hamilton filter
 
 		// Get State space parameter
-		UpdateStateEquationParameter(t+1, y); 
+		UpdateStateModelParameters(t+1, y, x); 
 	}
 	return error_code;
 }

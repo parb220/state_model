@@ -10,7 +10,19 @@ extern "C"
 
 using namespace std; 
 
-CMSSM *MinusLogLikelihood::model; 
+class MinusLogLikelihood
+{
+public:
+        static CMSSM *model;
+        static vector<TDenseVector> y;
+        static vector<TDenseVector> z_0;
+        static vector<TDenseMatrix> P_0;
+        static TDenseVector initial_prob;
+
+        static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
+};
+
+CMSSM * MinusLogLikelihood::model; 
 vector<TDenseVector> MinusLogLikelihood::y; 
 vector<TDenseVector> MinusLogLikelihood::z_0; 
 vector<TDenseMatrix> MinusLogLikelihood::P_0; 
@@ -26,7 +38,7 @@ void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *
 		x.SetElement(x_array[i],i); 
 
 	// Modify model according to x
-	if ( !model->SetMeasurementEquationParameter(x) && !model->SetStateEquationParameter(x) )
+	if ( !model->UpdateStateModelParameters(0,y,x) )
 	{
 		vector<vector<TDenseVector> > z_tm1;
         	vector<vector<TDenseMatrix> > P_tm1;
@@ -58,7 +70,7 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 // 	-1:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	>=0:	inform code returned by npsol_
 {
-	if (CheckStateMeasurementTransitionEquations() )
+	if (CheckModelFunctions() )
 		return -1;
  
 	int error =1; 

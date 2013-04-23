@@ -1,8 +1,9 @@
 #include <cstdlib>
 #include "findequilibrium.hpp"
-#include "CMakeABPsiPiC_ststm1.hpp"
-#include "CMeasurementEquationFunction_test.hpp"
-#include "CTransitionMatrix_test.hpp"
+#include "RationalExpectationFunction_ststm1.hpp"
+#include "StateEquationFunction_ststm1.hpp"
+#include "MeasurementEquationFunction_ststm1.hpp"
+#include "TransitionMatrixFunction_ststm1.hpp" 
 #include "MakeLbUb_ststm1.hpp"
 #include "ReadWriteFile.hpp"
 
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 	size_t nTL = 1; 
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, new MakeABPsiPiC_ststm1, new MeasurementEquationFunction_test, new CTransitionProbMatrixFunction_Test); 
+	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	/* Find valid starting value: begin */
@@ -78,9 +79,7 @@ int main(int argc, char **argv)
 		cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------.\n"; 
 		abort(); 
 	}
-	// To properly set values of nZ, nE, nY and nU
-	model.SetStateEquationParameter(x0Valid); 
-	model.SetMeasurementEquationParameter(x0Valid); 
+	model.UpdateStateModelParameters(0,qdata,x0Valid); 
 	// Display x0Valid 
 	// Display(x0Valid); 
 	/* Find valid start value: end */

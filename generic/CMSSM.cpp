@@ -10,9 +10,11 @@ nZ(0), nY(0), nE(0), nU(0),
 state_equation_parameter(), 
 measurement_equation_parameter(), 
 transition_prob_parameter(),
+rational_expectation_function(NULL), 
 state_equation_function(NULL),
 measurement_equation_function(NULL),
-transition_prob_function(NULL)
+transition_prob_function(NULL),
+current_x() 
 {
 	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );   
         B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) );   
@@ -31,15 +33,18 @@ transition_prob_function(NULL)
 }
 
 
-CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp, MakeABPsiPiC *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf) :
+CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp, RationalExpectationFunction *_ref, StateEquationFunction *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf, const TDenseVector &_cx) :
 nL(_nL), nTL(_nTL),
-nS(_nS), nZ(0), nY(0), nE(0), nU(0),
+nS(_nS), 
+nZ(0), nY(0), nE(0), nU(0),
 state_equation_parameter(_sfp), 
 measurement_equation_parameter(_mfp), 
-transition_prob_parameter(_tpp), 
+transition_prob_parameter(_tpp),
+rational_expectation_function(_ref), 
 state_equation_function(_sef),
 measurement_equation_function(_mef),
-transition_prob_function(_tpmf)
+transition_prob_function(_tpmf), 
+current_x(_cx)
 {
 	nNu = (size_t)pow(nS, nL+1); 
 	nXi = (size_t)pow(nS, nTL+1); 
@@ -72,9 +77,11 @@ b(right.b), F(right.F), Phi_e(right.Phi_e), V(right.V),
 state_equation_parameter(right.state_equation_parameter), 
 measurement_equation_parameter(right.measurement_equation_parameter),
 transition_prob_parameter(right.transition_prob_parameter),
+rational_expectation_function(right.rational_expectation_function),
 state_equation_function(right.state_equation_function), 
 measurement_equation_function(right.measurement_equation_function),
-transition_prob_function(right.transition_prob_function)
+transition_prob_function(right.transition_prob_function), 
+current_x(right.current_x)
 {}
 
 CMSSM & CMSSM::operator=(const CMSSM &right)
@@ -105,21 +112,34 @@ CMSSM & CMSSM::operator=(const CMSSM &right)
 	state_equation_parameter = right.state_equation_parameter; 
 	measurement_equation_parameter = right.measurement_equation_parameter; 
 	transition_prob_parameter = right.transition_prob_parameter; 
+	rational_expectation_function = right.rational_expectation_function; 
 	state_equation_function = right.state_equation_function; 
 	measurement_equation_function = right.measurement_equation_function; 
 	transition_prob_function = right.transition_prob_function; 
+	current_x = right.current_x; 
         return *this;
 }
 
-bool CMSSM::CheckStateMeasurementTransitionEquations() const
+bool CMSSM::CheckModelFunctions() const
 // 
 // Returns:
-// 	true: if state_equation_function or measurement_equation_function or transition_prob_function 
+// 	true: if rational_expectation_function, state_equation_function or measurement_equation_function or transition_prob_function 
 // 		not properly set 
 // 	false: if all the above equations are properly set
 {
-	if (state_equation_function && measurement_equation_function && transition_prob_function)
+	if (rational_expectation_function && state_equation_function && measurement_equation_function && transition_prob_function)
 		return false; 
 	else 
 		return true; 
+}
+
+int CMSSM::UpdateStateModelParameters(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x)
+{
+	if (!UpdateStateEquationParameter(t,y,x) && !UpdateMeasurementEquationParameter(t,y,x) ) 
+	{
+		current_x = x;
+		return 0; 
+	}
+	else 
+		return 1;  
 }

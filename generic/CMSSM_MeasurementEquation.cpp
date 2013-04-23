@@ -2,27 +2,39 @@
 
 using namespace std; 
 
-int CMSSM::SetMeasurementEquationParameter(const TDenseVector &input_x)
-// Return value
-// 	-1: measurement_equation_function not specified
-// 	0: success
-// 	1: fail 
+void CMSSM::ClearMeasurementEquation()
 {
-	if (!measurement_equation_function)
-		return -1; 
+	a = vector<TDenseVector>(0); 
+	H = vector<TDenseMatrix>(0); 
+	Phi_u = vector<TDenseMatrix>(0); 
+	R = vector<TDenseMatrix>(0); 
+}
 
-	if (measurement_equation_function->convert(a, H, Phi_u, R, measurement_equation_parameter, input_x))
-		return 1;				 
-
-	if (nY != a[0].dim)
-		nY = a[0].dim;
-	if (nU != Phi_u[0].rows) 
-		nU = Phi_u[0].rows;
+int CMSSM::UpdateMeasurementEquationParameter(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x)
+// Returns: 
+// 	-1: measurement_equation_function not properly set
+// 	0: success
+// 	>0: error code returned by measurement_equation_function 
+{
+	if (current_x.dim != x.dim || !(current_x == x) )
+	{
+		if (!measurement_equation_function)
+		{
+			cerr << "MeasurementEquationFunction is not properly set up.\n"; 
+			ClearMeasurementEquation(); 
+			return -1; 
+		}
+		int error_code = measurement_equation_function->convert(a, H, Phi_u, R, measurement_equation_parameter, x);
+		if (error_code)
+		{
+			cerr << "Error occurred during MeasurementEquationFunction call: " << error_code << endl; 
+			ClearMeasurementEquation(); 
+			return error_code; 
+		}
+		if (nY != a[0].dim)
+			nY = a[0].dim;
+		if (nU != Phi_u[0].rows) 
+			nU = Phi_u[0].rows;
+	}
 	return 0; 
 }
-
-/* Nothing to do yet */
-void CMSSM::UpdateMeasurementEquationParameter(unsigned int t, const vector<TDenseVector> &y)
-{
-}
-/* Nothing to do yet */

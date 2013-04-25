@@ -1,4 +1,5 @@
 #include <vector>
+#include "CMSSM_Error_Code.hpp"
 #include "RationalExpectationFunction_ststm1.hpp"
 
 using namespace std; 
@@ -10,9 +11,9 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 //
 // 	A(s(t))*x(t) = C(s(t)) + B(s(t))*x(t-1) + Psi(s(t))*epsilon(t) + Pi(s(t))*eta(t)
 //
-// err is one if some A{i} is not of full rank and zero otherwise.
+// ERROR_OCCURRED is returned if some A{i} is not of full rank and SUCCESS otherwise.
 {
-	int error_code = 0; 
+	int error_code;  
 	size_t nX=14; 
 	unsigned i=0, j=nX; 
 	size_t nRegime = 2; 
@@ -109,8 +110,8 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 			Pi[i][j].SetElement(1.0,6,1);
 
 			if (Rank(A[i][j]) < n_)
-				error_code = 1;  
+				error_code = ERROR_OCCURRED;  
 		}
 	}
-	return error_code;
+	return SUCCESS;
 }

@@ -1,21 +1,22 @@
 #include <cstdlib>
 #include <cmath>
+#include "CMSSM_Error_Code.hpp"
 #include "TransitionMatrixFunction_ststm1.hpp" 
 
 using namespace std; 
 
-void TransitionProbMatrixFunction_ststm1 :: convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) 
+int TransitionProbMatrixFunction_ststm1 :: convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) 
 {
 	if (nS != 4)
 	{
 		cerr << "nS in TransitionProbMatrixFunction_Test::convert() not equal to 4\n"; 
-		abort(); 
+		return ERROR_OCCURRED; 
 	}
 
 	if (x.dim < 3)
 	{
 		cerr << "dimension of x in TransitionProbMatrixFunction_Test::convert() less than 3, probably mixing old and new code.\n"; 
-		abort(); 
+		return ERROR_OCCURRED;  
 	}
 
 	// Transition matrix from path of regimes
@@ -53,4 +54,5 @@ void TransitionProbMatrixFunction_ststm1 :: convert(TDenseMatrix &Q, unsigned in
 	}
 	else 
 		Q = Qs; 
+	return SUCCESS; 
 }

@@ -5,6 +5,7 @@
 #include "dw_dense_matrix.hpp"
 
 using namespace std; 
-bool LoadData(TDenseVector&, vector<TDenseVector>& , const string &filename);
+int LoadData(TDenseVector&, vector<TDenseVector>& , const string &filename);
+int LoadInitialValue(vector<TDenseVector> &, const string &filename); 
 
 #endif

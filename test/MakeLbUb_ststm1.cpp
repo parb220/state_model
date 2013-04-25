@@ -1,14 +1,15 @@
+#include "CMSSM_Error_Code.hpp"
 #include "MakeLbUb_ststm1.hpp"
 
 //
 // Set lower and upper bounds for parameter vector x
 //
 // Returns
-// 	false upon success (no error)
-// 	true if failed (number of bounds set is not equal to the number of parameters)
+// 	SUCCESS upon success (no error)
+// 	ERROR_OCCURRED if failed (number of bounds set is not equal to the number of parameters)
 //
 
-bool MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
+int MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
 {
 	const double INFINITE_BOUND = 10E20; 
 	size_t nX = 14;
@@ -210,7 +211,7 @@ bool MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice
 	}	
 
 	if (checked_counter == bDim)
-		return false; 	// no error
+		return SUCCESS; 	// no error
 	else 
-		return true; 	// error
+		return ERROR_OCCURRED; 	// error
 }

@@ -1,11 +1,12 @@
 #include <cmath>
+#include "CMSSM_Error_Code.hpp"
 #include "StateEquationFunction_ststm1.hpp"
 
 using namespace std; 
 
 int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &fixed_parameter, const TDenseVector &x, size_t nZ, size_t nE, size_t nNu)
 // Return value of error has the following meaning
-// 	0: success
+// 	SUCCESS: success
 // 	1: some A returned by MakeABPsiPiC is not invertible
 // 	2: p0<=0 or p0>1 or p1<=0 or p1>1
 // 	3: number of explosive roots is not equal to the number of expectational error. Thus
@@ -14,6 +15,8 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 // 	5: V0a*LeftSolve(A[0][1],Pi[0][1]) is not of full row rank
 // 	6: V1a*LeftSolve(A[1][1],Pi[1][1]) is not of full row rank
 // 	7: V1a*LeftSolve(A[1][0],Pi[1][0]) is not of full row rank
+// 	8: LeftSolve(A[i][i]-B[i][i],C[i][i]) error for some i 
+// 	9: Annihilator error
 {
 	// sizes 
 	size_t originalNS = 2; 
@@ -48,34 +51,45 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 		d[i] = TDenseVector(nZ,0.0);
 	}
 
+	try {
 	c_hat[0] = LeftSolve( (A[0][0]-B[0][0]), C[0][0] ); 
 	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] ); 
+	}
+	catch (...)
+	{	return 8; }
 
 	d[0] = C[0][1] - A[0][1]*c_hat[0] + B[0][1]*c_hat[1]; 
 	d[1] = C[1][0] - A[1][0]*c_hat[1] + B[1][0]*c_hat[0];
 	TDenseMatrix I; I.Identity(nZ); 
 
 	// Multiply by inverse of A
-	TDenseMatrix A00InvPi00 = LeftSolve(A[0][0], Pi[0][0]); 
-	TDenseMatrix A10InvPi10 = LeftSolve(A[1][0], Pi[1][0]);	// ??? Pi[1][0] or Pi[0][0] 
-	TDenseMatrix A11InvPi11 = LeftSolve(A[1][1], Pi[1][1]); 
-	TDenseMatrix A01InvPi01 = LeftSolve(A[0][1], Pi[0][1]); 
-	
-	TDenseMatrix A00InvB00 = LeftSolve(A[0][0], B[0][0]); 
-	TDenseMatrix A10InvB10 = LeftSolve(A[1][0], B[1][0]); 
-	TDenseMatrix A11InvB11 = LeftSolve(A[1][1], B[1][1]); 
-	TDenseMatrix A01InvB01 = LeftSolve(A[0][1], B[0][1]); 
+	TDenseMatrix A00InvPi00, A10InvPi10, A11InvPi11, A01InvPi01; 
+	TDenseMatrix A00InvB00, A10InvB10, A11InvB11, A01InvB01; 
+	TDenseMatrix A00InvPsi00, A01InvPsi01, A11InvPsi11, A10InvPsi10; 
+	A00InvPi00 = LeftSolve(A[0][0], Pi[0][0]); 
+	A10InvPi10 = LeftSolve(A[1][0], Pi[1][0]);	// ??? Pi[1][0] or Pi[0][0] 
+	A11InvPi11 = LeftSolve(A[1][1], Pi[1][1]); 
+	A01InvPi01 = LeftSolve(A[0][1], Pi[0][1]); 
 
-	TDenseMatrix A00InvPsi00 = LeftSolve(A[0][0], Psi[0][0]); 
-	TDenseMatrix A01InvPsi01 = LeftSolve(A[0][1], Psi[0][1]); 
-	TDenseMatrix A11InvPsi11 = LeftSolve(A[1][1], Psi[1][1]); 
-	TDenseMatrix A10InvPsi10 = LeftSolve(A[1][0], Psi[1][0]); 
+	A00InvB00 = LeftSolve(A[0][0], B[0][0]); 
+	A10InvB10 = LeftSolve(A[1][0], B[1][0]); 
+	A11InvB11 = LeftSolve(A[1][1], B[1][1]); 
+	A01InvB01 = LeftSolve(A[0][1], B[0][1]); 
+
+	A00InvPsi00 = LeftSolve(A[0][0], Psi[0][0]); 
+	A01InvPsi01 = LeftSolve(A[0][1], Psi[0][1]); 
+	A11InvPsi11 = LeftSolve(A[1][1], Psi[1][1]); 
+	A10InvPsi10 = LeftSolve(A[1][0], Psi[1][0]);
 
 	// Annihilators
 	TDenseMatrix V0a, V1a; 
-	TDenseVector E0a, E1a; 
-	Annihilator(V0a, E0a, A00InvB00); 
-	Annihilator(V1a, E1a, A11InvB11);
+	TDenseVector E0a, E1a;
+	try { 
+		Annihilator(V0a, E0a, A00InvB00); 
+		Annihilator(V1a, E1a, A11InvB11);
+	}
+	catch(...)
+	{	return 9; }
 
 	// Regime 0 determinate?
 	if (V0a.rows != nExpectation)
@@ -246,5 +260,5 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	Phi_e[15] = intermediate_Phi_e[4]; 
 	V[15] = intermediate_V[4]; 
 
-	return 0; 
+	return SUCCESS; 
 }

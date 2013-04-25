@@ -1,5 +1,6 @@
 #include <string>
 #include "dw_rand.h"
+#include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
 
 extern "C"
@@ -83,21 +84,22 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 // Tries to find an x that is an valid initial point
 //
 // Return value 
-// 	-1:     state_equation_function, measurement_equation_function or transition_prob_function not properly set
-// 	0:	success (no error)
-// 	1:	error occurred
+// 	MODEL_NOT_PROPERLY_SET:     state_equation_function, measurement_equation_function or transition_prob_function not properly set
+// 	SUCCESS:	success (no error)
+// 	ERRO_OCCURRED:	error occurred
 //
 // Also returned:
 // 	x:	valid initial point if successful
 // 	fval:	vector of objective function values. A value <0 means that a determinate solution in regime 1 has been found
 {
-	if (CheckModelFunctions()) 
-		return -1; 
+	if (CheckModelFunctions() != SUCCESS) 
+		return MODEL_NOT_PROPERLY_SET; 
 
-	int error = 1;
+	int error;
 	const double INFINITE_BOUND = 1.0E20; 
 	const double TOLERANCE = 0.0; 
 	const string COLD_START = string("Cold Start"); 
+	const string NO_PRINT_OUT = string("Major print level = 1");
 
 	fval = TDenseVector(max_count, 0.0); 
 	unsigned int count = 0; 
@@ -159,6 +161,7 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 	while (count < max_count)
 	{
 		npoptn_((char*)COLD_START.c_str(), COLD_START.length());
+		npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length()); 
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw);
 		fval.SetElement(f, count); 
 		if (f < best_value)
@@ -193,22 +196,22 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 	}
 	if (best_value < TOLERANCE)
 	{
-		error = 0; 
+		error = SUCCESS; 
 		memcpy(x_raw, best_x, sizeof(double)*n); 
 	}
 	else
-		error = 1; 
+		error = ERROR_OCCURRED; 
 	delete [] best_x; 
 	
  	/* Below is almost the exact copy of Dan's code
 	while (error && count < max_count)
 	{
 		npoptn_((char*)COLD_START.c_str(), COLD_START.length()); 
+		npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length()); 
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
-
 		fval.SetElement(f, count); 
 		if (fval[count] < TOLERANCE)
-			error = 0; 
+			error = SUCCESS;  
 		else 
 		{
 			for (unsigned int i=0; i<x0.dim; i++)
@@ -237,7 +240,7 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 			count ++; 
 		}
 	} */
-	if (error == 0)
+	if (error == SUCCESS)
 	{	
 		x_optimal.Resize(x0.dim); 
 		for (unsigned int i=0; i<x0.dim; i++)

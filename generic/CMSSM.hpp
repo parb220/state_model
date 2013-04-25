@@ -90,11 +90,15 @@ class TransitionProbMatrixFunction
 // 	fixed_parameter 
 // 	x: free parameter
 // 
-// Result/Return:
+// Result
 // 	Q: transition probability matrix
+//
+// Return: 
+// 	SUCCESS: success
+// 	ERROR_OCCURRED: error_occurred
 {
 public:
-	virtual void convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) = 0; 
+	virtual int convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) = 0; 
 };
 
 //== Reigme (Markov) swithcing state model ==
@@ -147,15 +151,17 @@ public:
 	TransitionProbMatrixFunction *transition_prob_function; 
 	
 	int UpdateStateModelParameters(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x); 
-	TDenseMatrix GetTranstionProbMatrix(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x) const; 	
+	int GetTranstionProbMatrix(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x) const; 	
 
 	// Valid initial point
 	int ValidInitialPoint(TDenseVector &, TDenseVector &, const TDenseVector &x, size_t max_count, const TDenseVector& lb, const TDenseVector &ub); 
 
 	// Kalman filter
+	// 	Because it calls UpdateStateModelParameters, it cannot be constant
 	int KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob,  const TDenseVector &x);
 
 	// Minimize minus log likelihood 
+	// 	Because it calls KalmanFilter, it cannot be constant
 	int Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
  
 	// Constructor and destrunctor 
@@ -170,7 +176,7 @@ protected:
 	int UpdateMeasurementEquationParameter(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x);
 	void ClearStateEquation(); 
 	void ClearMeasurementEquation(); 
-	bool CheckModelFunctions() const; 
+	int CheckModelFunctions() const; 
 }; 
 
 #endif

@@ -1,3 +1,4 @@
+#include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
 
 using namespace std; 
@@ -18,16 +19,16 @@ int CMSSM::UpdateMeasurementEquationParameter(unsigned int t, const vector<TDens
 {
 	if (current_x.dim != x.dim || !(current_x == x) )
 	{
-		if (!measurement_equation_function)
+		if (measurement_equation_function == NULL)
 		{
-			cerr << "MeasurementEquationFunction is not properly set up.\n"; 
+			// cerr << "MeasurementEquationFunction is not properly set up.\n"; 
 			ClearMeasurementEquation(); 
-			return -1; 
+			return MODEL_NOT_PROPERLY_SET; 
 		}
 		int error_code = measurement_equation_function->convert(a, H, Phi_u, R, measurement_equation_parameter, x);
-		if (error_code)
+		if (error_code != SUCCESS)
 		{
-			cerr << "Error occurred during MeasurementEquationFunction call: " << error_code << endl; 
+			// cerr << "Error occurred during MeasurementEquationFunction call: " << error_code << endl; 
 			ClearMeasurementEquation(); 
 			return error_code; 
 		}
@@ -36,5 +37,5 @@ int CMSSM::UpdateMeasurementEquationParameter(unsigned int t, const vector<TDens
 		if (nU != Phi_u[0].rows) 
 			nU = Phi_u[0].rows;
 	}
-	return 0; 
+	return SUCCESS; 
 }

@@ -1,6 +1,7 @@
 #ifndef _MEASUREMENT_EQUATION_FUNCTION_STSTM1
 #define _MEASUREMENT_EQUATION_FUNCTION_STSTM1
 
+#include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
 #include "findequilibrium.hpp"
 
@@ -25,7 +26,7 @@ int MeasurementEquationFunction_ststm1::convert(vector<TDenseVector> &a, vector<
 		Phi_u[i].Zeros(0,0); 
 		R[i].Zeros(0,0); 
 	}
-	return 0;	// no error
+	return SUCCESS;	// no error
 }
 
 #endif

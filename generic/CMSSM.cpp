@@ -1,4 +1,5 @@
 #include <cmath>
+#include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
 
 using namespace std; 
@@ -120,26 +121,26 @@ CMSSM & CMSSM::operator=(const CMSSM &right)
         return *this;
 }
 
-bool CMSSM::CheckModelFunctions() const
+int CMSSM::CheckModelFunctions() const
 // 
 // Returns:
-// 	true: if rational_expectation_function, state_equation_function or measurement_equation_function or transition_prob_function 
+// 	ERROR_OCCURRED: if rational_expectation_function, state_equation_function or measurement_equation_function or transition_prob_function 
 // 		not properly set 
-// 	false: if all the above equations are properly set
+// 	SUCCESS: if all the above equations are properly set
 {
 	if (rational_expectation_function && state_equation_function && measurement_equation_function && transition_prob_function)
-		return false; 
+		return SUCCESS; 
 	else 
-		return true; 
+		return ERROR_OCCURRED; 
 }
 
 int CMSSM::UpdateStateModelParameters(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x)
 {
-	if (!UpdateStateEquationParameter(t,y,x) && !UpdateMeasurementEquationParameter(t,y,x) ) 
+	if (UpdateStateEquationParameter(t,y,x) == SUCCESS && UpdateMeasurementEquationParameter(t,y,x) == SUCCESS ) 
 	{
 		current_x = x;
-		return 0; 
+		return SUCCESS; 
 	}
 	else 
-		return 1;  
+		return ERROR_OCCURRED;  
 }

@@ -1,4 +1,5 @@
 #include <cmath>
+#include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
 
 using namespace std; 
@@ -21,15 +22,15 @@ int CMSSM::UpdateStateEquationParameter(unsigned int t, const vector<TDenseVecto
 	{
 		if (!rational_expectation_function || !state_equation_function)
 		{
-			cerr << "RationalExpectationFunction or StateEquationFunction is not properly set up.\n"; 
+			// cerr << "RationalExpectationFunction or StateEquationFunction is not properly set up.\n"; 
 			ClearStateEquation(); 
-			return -1;
+			return MODEL_NOT_PROPERLY_SET;
 		}
 		int error_code; 
 		error_code = rational_expectation_function->convert(A,B,Psi,Pi,C,state_equation_parameter, x); 
-		if (error_code)
+		if (error_code != SUCCESS)
 		{
-			cerr << "Error occurred during RationalExpectationFunction call: " << error_code << endl; 
+			// cerr << "Error occurred during RationalExpectationFunction call: " << error_code << endl; 
 			ClearStateEquation(); 
 			return error_code; 
 		}
@@ -39,12 +40,12 @@ int CMSSM::UpdateStateEquationParameter(unsigned int t, const vector<TDenseVecto
 			nE = Psi[0][0].cols; 
 		
 		error_code = state_equation_function->convert(b,F,Phi_e,V,A,B,Psi,Pi,C,state_equation_parameter,x,nZ,nE,nNu); 
-		if (error_code)
+		if (error_code != SUCCESS)
 		{
-			cerr << "Error occurred during StateEquationFunction call: " << error_code << endl; 
+			// cerr << "Error occurred during StateEquationFunction call: " << error_code << endl; 
 			ClearStateEquation(); 
 			return error_code;  
 		}
 	}
-	return 0; 
+	return SUCCESS; 
 }

@@ -127,7 +127,6 @@ int main(int argc, char **argv)
 	/* Maximize log-likelihood */
 	const double MINUS_INFINITY = -1.0e30; 
 
-	
 	unsigned int i=0, number_bad=0; 
 	bool bad; 
 	double ll;	// log likelihood
@@ -136,16 +135,21 @@ int main(int argc, char **argv)
 
 	TDenseVector best_solution(nFree+1, 0.0);
 	best_solution.SetElement(MINUS_INFINITY, 0); 
-	vector<TDenseVector> solutions;  
+	vector<TDenseVector> solutions; 
+	bool if_search_initial;  
 	if (initialX.empty())
 	{
 		initialX.resize(n_tries); 
 		for (unsigned int i=0; i<n_tries; i++)
 			initialX[i].RandomNormal(nFree);
-		solutions.resize(n_tries); 
+		solutions.resize(n_tries);
+		if_search_initial = true;  
 	}
 	else 
+	{
 		solutions.resize(initialX.size()); 
+		if_search_initial = false; 
+	}
 	
 	for (unsigned int i=0; i<solutions.size(); i++)
 		solutions[i] = TDenseVector(nFree+1,0.0); 
@@ -163,11 +167,24 @@ int main(int argc, char **argv)
 			x0.SetElement(0.5,x0.dim-2); 
 
 		max_count = 10; 
-		if ( MakeLbUb_ststm1(lb, ub, nFree) != SUCCESS || model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub)!= SUCCESS || model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) == MODEL_NOT_PROPERLY_SET ) 
+		if (if_search_initial) 
 		{
-			bad = true; 
-			number_bad ++; 
+			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
+				bad = false; 
+			else 
+				bad = true; 
 		}
+		else 
+		{
+			x0Valid = x0; 
+			if (model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
+				bad = false; 
+			else 
+				bad = true; 
+				
+		}
+		if (bad )
+			number_bad ++; 	
 		else 
 		{
 			ll = -mll; 

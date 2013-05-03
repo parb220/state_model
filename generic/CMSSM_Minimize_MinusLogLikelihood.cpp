@@ -11,18 +11,6 @@ extern "C"
 
 using namespace std; 
 
-class MinusLogLikelihood
-{
-public:
-        static CMSSM *model;
-        static vector<TDenseVector> y;
-        static vector<TDenseVector> z_0;
-        static vector<TDenseMatrix> P_0;
-        static TDenseVector initial_prob;
-
-        static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
-};
-
 CMSSM * MinusLogLikelihood::model; 
 vector<TDenseVector> MinusLogLikelihood::y; 
 vector<TDenseVector> MinusLogLikelihood::z_0; 
@@ -57,8 +45,9 @@ void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *
         		vector<TDenseMatrix> new_P_0 = P_tm1.back();
        
         		// Kalman filter 
-        		sub_y = vector<TDenseVector>(y.begin()+initial_period, y.end());
-			kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, new_z_0, new_P_0, initial_prob, x);
+        		// sub_y = vector<TDenseVector>(y.begin()+initial_period, y.end());
+			// kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, new_z_0, new_P_0, initial_prob, x);
+			kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, y, new_z_0, new_P_0, initial_prob, x); 
                        if (kalman_error == SUCCESS)
         			minus_log_likelihood = -log_likelihood;
         	}
@@ -68,11 +57,14 @@ void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *
 
 int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
 // Returns
-// 	-1:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
+// 	MODEL_NOT_PROPERLY_SET:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	>=0:	inform code returned by npsol_
 {
 	if (CheckModelFunctions() != SUCCESS)
+	{
+		minus_log_likelihood_optimal = 1.0e30; 
 		return MODEL_NOT_PROPERLY_SET; 
+	}
  
 	int error; 
 
@@ -85,7 +77,8 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 
 	const double INFINITE_BOUND = 1.0E20;
 	const string COLD_START = string("Cold Start");
-	const string NO_PRINT_OUT = string("Major print level = 1"); 
+	const string NO_PRINT_OUT = string("Major print level = 0"); 
+	const string DERIVATIVE_LEVEL = string("Derivative level = 0"); 
 	// npsol unconstrained 
 	int n = x0.dim; 
 	int nclin = 0; 
@@ -124,9 +117,10 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 		bl[i] = -INFINITE_BOUND; 
 		bu[i] = INFINITE_BOUND; 
 	}
-	
+
+	npoptn_((char*)DERIVATIVE_LEVEL.c_str(), DERIVATIVE_LEVEL.length()); 
 	npoptn_((char*)COLD_START.c_str(), COLD_START.length());
-	npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length()); 
+	npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length());
 	npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, MinusLogLikelihood::function, &inform, &iter, istate, c, cJac, clambda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
 	x_optimal.Resize(n); 

@@ -21,6 +21,8 @@ class StateEquationFunction;
 class TransitionProbMatrixFunction; 
 class MeasurementEquationFunction; 
 class CMSSM; 
+class MinusLogLikelihood;
+class ObjectiveFunction_Validation;
 
 class RationalExpectationFunction
 // Gensys form of the state equation
@@ -178,5 +180,24 @@ protected:
 	void ClearMeasurementEquation(); 
 	int CheckModelFunctions() const; 
 }; 
+
+class MinusLogLikelihood
+{
+public:
+        static CMSSM *model;
+        static vector<TDenseVector> y;
+        static vector<TDenseVector> z_0;
+        static vector<TDenseMatrix> P_0;
+        static TDenseVector initial_prob;
+
+        static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
+};
+
+class ObjectiveFunction_Validation
+{
+public:
+        static CMSSM *model;
+        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
+};
 
 #endif

@@ -14,7 +14,8 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 // 		MODEL_NOT_PROPERLY_SET:	state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 		SUCCESS:	success
 //		ERROR_OCCURRED:	error occurred
-//	and
+// 
+// Results:
 //
 // 	for k=0,1,...,nXi-1 and t=0,1,...,T-1
 // 	z_tm1(t,k) = E( z(t) | Y(t-1), xi(t)=k ), 
@@ -53,21 +54,25 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 // Values inferred from input parameters and CMSSM inherent parameters
 // 	T:	y.size(), number of time points for which measurments are available
 {
-	// Get state space parameters
+	const double MINUS_INFINITY_LOCAL = -1.0e30; 
+	const double CONSTANT = -0.918938533204673*nY; 
+	
 	if (CheckModelFunctions() != SUCCESS) 
+	{
+		log_likelihood = MINUS_INFINITY_LOCAL; 	
 		return MODEL_NOT_PROPERLY_SET; 
+	}
 
-	UpdateStateModelParameters(0,y,x); 
+	if (UpdateStateModelParameters(0,y,x) != SUCCESS)
+	{
+		log_likelihood = MINUS_INFINITY_LOCAL; 
+		return ERROR_OCCURRED; 
+	}
 	
 	// Sizes and constants
 	size_t T = y.size(); 	
 	size_t loop_2 = (size_t)pow(nS,nL); 
 	size_t loop_1 = (size_t)pow(nS,nTL-nL); 
-	const double CONSTANT = -0.918938533204673*nY; 
-	
-	// const double MINUS_INFINITY = -1.0e30; 
-
-	// R already calculated in the measurement equations	
 	
 	// output values
 	z_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi) );  
@@ -128,9 +133,9 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 			p_tm1[t] = initial_prob;
 		else
 		{
-			if (GetTranstionProbMatrix(Q, t,y,x) != SUCCESS)
+			if (GetTranstionProbMatrix(Q, t-1,y,x) != SUCCESS)
 			{
-				log_likelihood = MINUS_INFINITY;
+				log_likelihood = MINUS_INFINITY_LOCAL;
                                 return ERROR_OCCURRED;
 			}
 			p_tm1[t].Multiply(Q,p_t[t-1]);  
@@ -150,7 +155,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 					{
 						if(!OK_t[t-1][xi])
 						{
-							log_likelihood = MINUS_INFINITY; 
+							log_likelihood = MINUS_INFINITY_LOCAL; 
 							return ERROR_OCCURRED; 
 						}
 						conditional_prob += p_t[t-1][xi]; 
@@ -208,36 +213,30 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 						N_tm1[t][xi] = (N_tm1[t][xi]+Transpose(N_tm1[t][xi]) ) *0.5; 
 
 						double log_abs_determinant = N_tm1[t][xi].LogAbsDeterminant();
-						if (log_abs_determinant > MINUS_INFINITY)
+						TDenseVector tempV; 
+						try 
+						{ 	tempV=LeftSolve(N_tm1[t][xi],ey_tm1[t][xi]); }
+						catch (...)
 						{
-							TDenseVector tempV; 
-							try { tempV=LeftSolve(N_tm1[t][xi],ey_tm1[t][xi]); }
-							catch (...)
-							{
-								OK_t[t][xi] = false; 
-								log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
-								// throw dw_exception("Error occurred in LeftSolve()"); 
-							}
-							log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],tempV)), xi);
-							// computes z_t[t][xi] and P[t][xi]
-							z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
-							TDenseMatrix tempM; 
-							try { tempM = LeftSolve(N_tm1[t][xi],Transpose(K)); }
-							catch (...)
-							{
-								OK_t[t][xi] = false; 
-								log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi);
-							}
-							P_t[t][xi].Subtract(P_tm1[t][xi], K*tempM ); 
+							log_conditional_likelihood[t].SetElement(MINUS_INFINITY_LOCAL, xi); 
+							TDenseMatrix N = N_tm1[t][xi].GeneralizedInverse(); 
+							z_t[t][xi].Add(z_tm1[t][xi], K*N*ey_tm1[t][xi]); 
+							P_t[t][xi].Subtract(P_tm1[t][xi],K*MultiplyTranspose(N,K)); 
 							// force symmetry
-							P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
-							OK_t[t][xi] = true; 
+							P_t[t][xi] = (P_t[t][xi]+Transpose(P_t[t][xi])) * 0.5; 
+							OK_t[t][xi] = true;
+							continue;  
 						}
-						else 
-						{
-							OK_t[t][xi] = false; 
-							log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
-						}
+						log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],tempV)), xi);
+						// computes z_t[t][xi] and P[t][xi]
+						z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
+						// If the program can reach here, then N_tm1[t][xi] is inversible
+						// Therefore tempM should not incurr errors
+						TDenseMatrix tempM = LeftSolve(N_tm1[t][xi],Transpose(K)); 
+						P_t[t][xi].Subtract(P_tm1[t][xi], K*tempM ); 
+						// force symmetry
+						P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
+						OK_t[t][xi] = true; 
 					}
 				}
 				else 
@@ -245,14 +244,14 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 					for (unsigned int s=0; s<nS; s++)
 					{
 						unsigned int xi = s + nS*zeta; 
-						log_conditional_likelihood[t].SetElement(MINUS_INFINITY, xi); 
+						log_conditional_likelihood[t].SetElement(MINUS_INFINITY_LOCAL, xi); 
 					}
 				}
 			}
 		}
 
 		// == Hamilton filter =====
-		double scale = MINUS_INFINITY; 
+		double scale = MINUS_INFINITY_LOCAL; 
 		for (unsigned int xi=0; xi<nXi; xi++)
 		{
 			if (p_tm1[t][xi] > 0.0)
@@ -261,7 +260,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 				p_t[t].SetElement(log( p_tm1[t][xi] ) + log_conditional_likelihood[t][xi], xi); 
 			}
 			else 
-				p_t[t].SetElement(MINUS_INFINITY, xi); 
+				p_t[t].SetElement(MINUS_INFINITY_LOCAL, xi); 
 		}
 
 		// update log liklihoood
@@ -273,7 +272,11 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 		// End Hamilton filter
 
 		// Get State space parameter
-		UpdateStateModelParameters(t+1, y, x); 
+		if (UpdateStateModelParameters(t+1, y, x) != SUCCESS)
+		{
+			log_likelihood == MINUS_INFINITY_LOCAL; 
+			return ERROR_OCCURRED; 
+		} 
 	}
 	return SUCCESS;
 }

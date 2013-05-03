@@ -11,13 +11,6 @@ extern "C"
 
 using namespace std; 
 
-class ObjectiveFunction_Validation
-{
-public:
-        static CMSSM *model;
-        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
-};
-
 CMSSM *ObjectiveFunction_Validation::model; 
 
 void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, double *f, double *g, int *nstate)
@@ -99,7 +92,8 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 	const double INFINITE_BOUND = 1.0E20; 
 	const double TOLERANCE = 0.0; 
 	const string COLD_START = string("Cold Start"); 
-	const string NO_PRINT_OUT = string("Major print level = 1");
+	const string NO_PRINT_OUT = string("Major print level = 0");
+	const string DERIVATIVE_LEVEL = string("Derivative level = 0"); 
 
 	fval = TDenseVector(max_count, 0.0); 
 	unsigned int count = 0; 
@@ -156,12 +150,13 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
  	ObjectiveFunction_Validation::model = this; 
 	// Below is a revision based on Dan's code
 	// We try a number, max_count, of times and finds the best solution
-	double best_value = 1.0; 
+	double best_value = 1.0e10; 
 	double *best_x = new double[n];
 	while (count < max_count)
 	{
-		npoptn_((char*)COLD_START.c_str(), COLD_START.length());
-		npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length()); 
+		npoptn_((char*)DERIVATIVE_LEVEL.c_str(), DERIVATIVE_LEVEL.length());
+	        npoptn_((char*)COLD_START.c_str(), COLD_START.length());
+        	npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length());
 		npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, ObjectiveFunction_Validation::function, &inform, &iter, istate, c, cJac, clamda, &f, g, R, x_raw, iw, &leniw, w, &lenw);
 		fval.SetElement(f, count); 
 		if (f < best_value)

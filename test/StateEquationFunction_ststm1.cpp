@@ -51,10 +51,10 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 		d[i] = TDenseVector(nZ,0.0);
 	}
 
-	try {
-	c_hat[0] = LeftSolve( (A[0][0]-B[0][0]), C[0][0] ); 
-	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] ); 
-	}
+	try {	c_hat[0] = LeftSolve( (A[0][0]-B[0][0]), C[0][0] ); }
+	catch(...)
+	{	return 8; }
+	try {	c_hat[1] = LeftSolve( (A[1][1]-B[1][1]), C[1][1] ); }
 	catch (...)
 	{	return 8; }
 
@@ -84,10 +84,10 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	// Annihilators
 	TDenseMatrix V0a, V1a; 
 	TDenseVector E0a, E1a;
-	try { 
-		Annihilator(V0a, E0a, A00InvB00); 
-		Annihilator(V1a, E1a, A11InvB11);
-	}
+	try { Annihilator(V0a, E0a, A00InvB00); }
+	catch(...)
+	{	return 9; }
+	try { Annihilator(V1a, E1a, A11InvB11); }
 	catch(...)
 	{	return 9; }
 
@@ -135,9 +135,9 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	// Delta11 = reshape(x(end-1-N11.cols*nE:end-2),N11.cols, nE); 
 	TDenseMatrix Delta11(N11.cols, nE); 
 	unsigned int counter_reshape = x.dim-2-Delta11.rows *Delta11.cols; 
-	for (unsigned int i=0; i<Delta11.rows; i++)
+	for (unsigned int j=0; j<Delta11.cols; j++)
 	{
-		for (unsigned int j=0; j<Delta11.cols; j++)
+		for (unsigned int i=0; i<Delta11.rows; i++)
 		{
 			Delta11.SetElement(x(counter_reshape), i,j);
 			counter_reshape++;
@@ -166,7 +166,7 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	X=A00InvPi00*M10*((1.0-p0)/p0);
 	intermediate_F[1] = A00InvB00 + X*A10InvB10; 
 	intermediate_Phi_e[1] = A00InvPsi00 + A00InvPi00*G0; 
-	intermediate_b[1] = c_hat[0] - intermediate_F[1]*c_hat[0] + X*(LeftSolve(A[1][0], d[1]) +  A00InvPi00*N10*gamma10*((1.0-p0)/p0) ); 
+	intermediate_b[1] = c_hat[0] - intermediate_F[1]*c_hat[0] + X*LeftSolve(A[1][0], d[1]) +  A00InvPi00*N10*gamma10*((1.0-p0)/p0) ; 
 
 	// ====== s(t+1)=1 s(t)=0 p(t)=p0 ===============================
 	X = I - A10InvPi10*M10; 

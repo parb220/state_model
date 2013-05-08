@@ -200,6 +200,7 @@ int main(int argc, char **argv)
 			bad = false; 
 		}
 	}
-	cout << "best solution " << best_solution << endl; 
-	cout << "number of bad tries " << number_bad << endl; 
+	for (unsigned int i=0; i<best_solution.dim; i++)
+		printf("%.20g ", best_solution[i]); 
+	printf("\n"); 
 }

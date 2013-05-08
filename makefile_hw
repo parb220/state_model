@@ -73,7 +73,7 @@ VPATH := $(VPATH) $(MATH_DIR) $(MATRIX_DIR) $(GENERIC_SRC_DIR) $(TEST_SRC_DIR) $
 MATRIX_OBJS = dw_dense_matrix.o dw_utilities.o dw_rand_gsl.o dw_math.o
 
 # PROJECT FILES
-GENERIC_OBJS = CMSSM.o CMSSM_StateEquation.o CMSSM_MeasurementEquation.o CMSSM_TransitionProbMatrix.o CMSSM_ValidInitialPoint.o CMSSM_KalmanFilter.o CMSSM_Minimize_MinusLogLikelihood.o #CMSSM_CheckSolution.o
+GENERIC_OBJS = CMSSM.o CMSSM_StateEquation.o CMSSM_MeasurementEquation.o CMSSM_TransitionProbMatrix.o CMSSM_ValidInitialPoint.o CMSSM_KalmanFilter.o CMSSM_Minimize_MinusLogLikelihood.o CMSSM_LogLikelihood.o #CMSSM_CheckSolution.o
 
 TEST_OBJS_COMMON = RationalExpectationFunction_ststm1.o StateEquationFunction_ststm1.o TransitionMatrixFunction_ststm1.o MakeLbUb_ststm1.o ReadWriteFile.o #gensys_1stregime.o
 

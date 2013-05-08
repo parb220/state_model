@@ -166,6 +166,10 @@ public:
 	// 	Because it calls KalmanFilter, it cannot be constant
 	int Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
  
+	// Calculate log likelihood
+	// 	Because it calls KalmanFilter, it cannot be constatn
+	int LogLikelihood(double &log_likelihood, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
+
 	// Constructor and destrunctor 
 	CMSSM();
 	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, const TDenseVector & =TDenseVector()); 

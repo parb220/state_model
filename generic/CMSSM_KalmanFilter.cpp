@@ -212,6 +212,16 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 						// force symmetry
 						N_tm1[t][xi] = (N_tm1[t][xi]+Transpose(N_tm1[t][xi]) ) *0.5; 
 
+						// Theoretically, N_tm1[t][xi], P_tm1[t][xi], IP_t[t-1][zeta] and P_t[t][xi] all
+						// represent covariance matrices, and are therefore all semi positive. Consequently,
+						// ey_tm1[t][xi]*Inverse(N_tm1[t][xi])*ey_tm1[t][xi] should >=0;
+						// However, computationally, because 
+						//	P_t[t][xi] = P_tm1[t][xi]-K* Inverse(N_tm1[t][xi]) 
+						//	ey_tm1[t][xi]*Inverse(N_tm1[t][xi])*ey_tm1[t][xi]	
+						// where the inverse are both based on LU decomposition and is not numically stable.
+						// So if ey_tm1[t][xi]*Inverse(N_tm1[t][xi])*ey_tm1[t][xi] renders a negative result,
+						// it should be abondoned. 
+
 						double log_abs_determinant = N_tm1[t][xi].LogAbsDeterminant();
 						TDenseVector tempV; 
 						try 
@@ -227,7 +237,7 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 							OK_t[t][xi] = true;
 							continue;  
 						}
-						log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+ InnerProduct(ey_tm1[t][xi],tempV)), xi);
+						double inner_product = InnerProduct(ey_tm1[t][xi],tempV); 
 						// computes z_t[t][xi] and P[t][xi]
 						z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
 						// If the program can reach here, then N_tm1[t][xi] is inversible
@@ -236,7 +246,16 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 						P_t[t][xi].Subtract(P_tm1[t][xi], K*tempM ); 
 						// force symmetry
 						P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
-						OK_t[t][xi] = true; 
+						if (inner_product >= 0)
+						{
+							log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+inner_product), xi);
+							OK_t[t][xi] = true; 
+						}
+						else
+						{
+							log_conditional_likelihood[t].SetElement(MINUS_INFINITY_LOCAL, xi);
+							OK_t[t][xi] = false; 	
+						}
 					}
 				}
 				else 

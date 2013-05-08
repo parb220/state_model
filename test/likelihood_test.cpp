@@ -106,7 +106,16 @@ int main(int argc, char **argv)
 	}
 
 	/* Calculate log-likelihood */
-	const double MINUS_INFINITY = -1.0e30; 
+	double log_likelihood; 
+	for (unsigned int i=0; i<initialX.size(); i++)
+	{
+		if (model.LogLikelihood(log_likelihood, initialX[i], qdata, z0, P0, initial_prob) == SUCCESS)
+			cout << "Log Likelihood " << log_likelihood << endl; 
+		else 
+			cout << "Error occurred when calculating log_likelihood.\n"; 
+	
+	}
+	/*const double MINUS_INFINITY = -1.0e30; 
 
 	MinusLogLikelihood::model = &model;
         MinusLogLikelihood::y = qdata;
@@ -121,5 +130,5 @@ int main(int argc, char **argv)
 		nX= initialX[i].dim; 
 		MinusLogLikelihood::function(&mode, &nX, initialX[i].vector, &f, &g, &nstate); 
 		cout << "Minus Log Likelihood " << f << endl; 
-	}
+	}*/
 }

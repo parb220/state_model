@@ -15,14 +15,21 @@
 #include "dw_dense_matrix.hpp"
 
 using namespace std; 
-
+class PriorDistributionFunction; 
 class RationalExpectationFunction;
 class StateEquationFunction;  
 class TransitionProbMatrixFunction; 
 class MeasurementEquationFunction; 
 class CMSSM; 
 class MinusLogLikelihood;
+class MinusLogPosterior;
 class ObjectiveFunction_Validation;
+
+class PriorDistributionFunction
+{
+public:
+	virtual double log_pdf(const TDenseVector &x, const TDenseVector &fixed_parameter) = 0; 
+};
 
 class RationalExpectationFunction
 // Gensys form of the state equation
@@ -142,15 +149,17 @@ protected:
 
 public:
 	// fixed parameters
-	TDenseVector state_equation_parameter;	// free parameters to be used in state equations
-	TDenseVector measurement_equation_parameter;	// free parameters to be used in measurement equations
-	TDenseVector transition_prob_parameter;	// free parameters to be used in transition prob
+	TDenseVector state_equation_parameter;	// parameters to be used in state equations
+	TDenseVector measurement_equation_parameter;	// parameters to be used in measurement equations
+	TDenseVector transition_prob_parameter;	// parameters to be used in transition prob
+	TDenseVector prior_distr_parameter; 	// parameters to be used in specifying prior distribution functions 
 
 	// functions used to specify rationa expectation model, state model, and transition prob matrix
 	RationalExpectationFunction *rational_expectation_function;
 	StateEquationFunction *state_equation_function; 
 	MeasurementEquationFunction *measurement_equation_function; 
 	TransitionProbMatrixFunction *transition_prob_function; 
+	PriorDistributionFunction *prior_distr_function; 
 	
 	int UpdateStateModelParameters(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x); 
 	int GetTranstionProbMatrix(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x) const; 	
@@ -162,17 +171,25 @@ public:
 	// 	Because it calls UpdateStateModelParameters, it cannot be constant
 	int KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z_tm1, vector<vector<TDenseMatrix> > &P_tm1, vector<TDenseVector > &p_tm1, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob,  const TDenseVector &x);
 
-	// Minimize minus log likelihood 
-	// 	Because it calls KalmanFilter, it cannot be constant
-	int Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
- 
 	// Calculate log likelihood
 	// 	Because it calls KalmanFilter, it cannot be constatn
 	int LogLikelihood(double &log_likelihood, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
+	
+	// Minimize minus log likelihood 
+	// 	Because it calls KalmanFilter, it cannot be constant
+	int Maximize_LogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
+ 
+	// Calculate log posterior 
+	// 	Because it calls LogLikelihood (which calls KalmanFilter), it cannot be constant
+	int LogPosterior(double &log_posterior, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
+
+	// Maximize log posterior
+	// 	Because it calls KalmanFilter, it cannot be constant
+	int Maximize_LogPosterior(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
 
 	// Constructor and destrunctor 
 	CMSSM();
-	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, const TDenseVector & =TDenseVector()); 
+	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &, const TDenseVector &, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector()); 
 	CMSSM(const CMSSM &right); 
 	CMSSM &operator=(const CMSSM &right); 
 	~CMSSM() {}
@@ -195,6 +212,18 @@ public:
         static TDenseVector initial_prob;
 
         static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
+};
+
+class MinusLogPosterior
+{
+public:
+	static CMSSM *model; 
+	static vector<TDenseVector> y; 
+	static vector<TDenseVector> z_0; 
+	static vector<TDenseMatrix> P_0; 
+	static TDenseVector initial_prob; 
+
+	static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate); 
 };
 
 class ObjectiveFunction_Validation

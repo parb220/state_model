@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	size_t nTL = 1; 
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1); 
+	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, TDenseVector(), new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1, NULL); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	size_t max_count; 
@@ -115,20 +115,4 @@ int main(int argc, char **argv)
 			cout << "Error occurred when calculating log_likelihood.\n"; 
 	
 	}
-	/*const double MINUS_INFINITY = -1.0e30; 
-
-	MinusLogLikelihood::model = &model;
-        MinusLogLikelihood::y = qdata;
-        MinusLogLikelihood::z_0 = z0;
-        MinusLogLikelihood::P_0 = P0;
-        MinusLogLikelihood::initial_prob = initial_prob;
-
-	int mode, nstate, nX;  
-	double f, g; 
-	for (unsigned int i=0; i<initialX.size(); i++)
-	{
-		nX= initialX[i].dim; 
-		MinusLogLikelihood::function(&mode, &nX, initialX[i].vector, &f, &g, &nstate); 
-		cout << "Minus Log Likelihood " << f << endl; 
-	}*/
 }

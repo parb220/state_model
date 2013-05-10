@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 	size_t nTL = 1; 
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1); 
+	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, TDenseVector(), new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1, NULL); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	size_t max_count; 
@@ -130,7 +130,6 @@ int main(int argc, char **argv)
 	unsigned int i=0, number_bad=0; 
 	bool bad; 
 	double ll;	// log likelihood
-	double mll;	// minus log likelihood
 	TDenseVector xOptimal(nFree); 
 
 	TDenseVector best_solution(nFree+1, 0.0);
@@ -169,7 +168,7 @@ int main(int argc, char **argv)
 		max_count = 10; 
 		if (if_search_initial) 
 		{
-			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
+			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Maximize_LogLikelihood(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
 				bad = false; 
 			else 
 				bad = true; 
@@ -177,7 +176,7 @@ int main(int argc, char **argv)
 		else 
 		{
 			x0Valid = x0; 
-			if (model.Minimize_MinusLogLikelihood(mll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
+			if (model.Maximize_LogLikelihood(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
 				bad = false; 
 			else 
 				bad = true; 
@@ -187,7 +186,6 @@ int main(int argc, char **argv)
 			number_bad ++; 	
 		else 
 		{
-			ll = -mll; 
 			solutions[i].SetElement(ll, 0); 
 			for (unsigned int j=1; j<solutions[i].dim; j++)
 				solutions[i].SetElement(xOptimal[j-1], j); 

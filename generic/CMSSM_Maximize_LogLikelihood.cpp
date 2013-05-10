@@ -1,13 +1,7 @@
 #include <string>
 #include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
-
-extern "C"
-{
-        void npsol_(int *n, int *nclin, int *ncnln, int *ldA, int *ldJ, int *ldR, double *A, double *bl, double *bu, void *funcon(int *mode, int *ncnln, int *n, int *ldJ, int *needc, double *x, double *c, double *cJac, int *nstate), void *funobj(int *mode, int *n, double *x, double *f, double *g, int *nstate), int *inform, int *iter, int *istate, double *c, double *cJac, double *clamda, double *f, double *g, double *R, double *x, int *iw, int *leniw, double *w, int *lenw);
-        void npoptn_(char *, int);
-}
-
+#include "optimization.hpp"
 
 using namespace std; 
 
@@ -19,56 +13,33 @@ TDenseVector MinusLogLikelihood::initial_prob;
 
 void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *f, double *g, int *nstate)
 {
-        double minus_log_likelihood=1.0e30;
-
 	// Make TDenseVector out of x_array
         TDenseVector x(*n); 
 	for (unsigned int i=0; i<*n; i++)
 		x.SetElement(x_array[i],i); 
 
-	// Modify model according to x
-	if ( model->UpdateStateModelParameters(0,y,x) == SUCCESS )
-	{
-		vector<vector<TDenseVector> > z_tm1;
-        	vector<vector<TDenseMatrix> > P_tm1;
-        	vector<TDenseVector> p_tm1;
-       
-		// Get initial values fo z_0 and P_0 from first few observations
-        	size_t initial_period = 4;
-        	vector<TDenseVector> sub_y(y.begin(), y.begin()+initial_period);
-        	double log_likelihood;
+        double minus_log_likelihood=1.0e30;
+	double log_likelihood; 
+	if (model->LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob) == SUCCESS)
+		minus_log_likelihood = -log_likelihood; 
 
-		int kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, z_0, P_0, initial_prob, x);
-        	if (kalman_error == SUCCESS)
-        	{
-        		vector<TDenseVector> new_z_0 = z_tm1.back();
-        		vector<TDenseMatrix> new_P_0 = P_tm1.back();
-       
-        		// Kalman filter 
-        		// sub_y = vector<TDenseVector>(y.begin()+initial_period, y.end());
-			// kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, sub_y, new_z_0, new_P_0, initial_prob, x);
-			kalman_error = model->KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, y, new_z_0, new_P_0, initial_prob, x); 
-                       if (kalman_error == SUCCESS)
-        			minus_log_likelihood = -log_likelihood;
-        	}
-	}
 	*f = minus_log_likelihood; 
 }
 
-int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
+int CMSSM::Maximize_LogLikelihood(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
 // Returns
 // 	MODEL_NOT_PROPERLY_SET:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	>=0:	inform code returned by npsol_
 {
 	if (CheckModelFunctions() != SUCCESS)
 	{
-		minus_log_likelihood_optimal = 1.0e30; 
+		log_likelihood_optimal = -1.0e30; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
  
 	int error; 
 
-	// Setting MinumsLogLikelihood static variables
+	// Setting MinusLogLikelihood static variables
 	MinusLogLikelihood::model = this; 
 	MinusLogLikelihood::y = y; 
 	MinusLogLikelihood::z_0 = z_0; 
@@ -126,7 +97,7 @@ int CMSSM::Minimize_MinusLogLikelihood(double &minus_log_likelihood_optimal, TDe
 	x_optimal.Resize(n); 
 	for (unsigned int i=0; i<n; i++)
 		x_optimal.SetElement(x_raw[i], i); 
-	minus_log_likelihood_optimal = f; 
+	log_likelihood_optimal = -f; 
 	error = inform; 
 	// inform returned by npsol_ has the following meanings:
 	// 	<0:	Either funcon or funobj has set mode to this negative value

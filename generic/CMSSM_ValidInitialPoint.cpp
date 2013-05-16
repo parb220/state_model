@@ -6,6 +6,13 @@
 
 using namespace std; 
 
+class ObjectiveFunction_Validation
+{
+public:
+        static CMSSM *model;
+        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
+};
+
 CMSSM *ObjectiveFunction_Validation::model; 
 
 void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, double *f, double *g, int *nstate)

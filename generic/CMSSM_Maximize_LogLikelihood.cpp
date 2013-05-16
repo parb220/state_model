@@ -5,13 +5,37 @@
 
 using namespace std; 
 
-CMSSM * MinusLogLikelihood::model; 
-vector<TDenseVector> MinusLogLikelihood::y; 
-vector<TDenseVector> MinusLogLikelihood::z_0; 
-vector<TDenseMatrix> MinusLogLikelihood::P_0; 
-TDenseVector MinusLogLikelihood::initial_prob; 
+class MinusLogLikelihood_NPSOL
+{
+public:
+        static CMSSM *model;
+        static vector<TDenseVector> y;
+        static vector<TDenseVector> z_0;
+        static vector<TDenseMatrix> P_0;
+        static TDenseVector initial_prob;
 
-void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *f, double *g, int *nstate)
+        static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
+};
+
+class MinusLogLikelihood_CSMINWEL
+{
+public:
+	static CMSSM *model; 
+	static vector<TDenseVector> y;
+        static vector<TDenseVector> z_0;
+        static vector<TDenseMatrix> P_0;
+        static TDenseVector initial_prob;
+
+	static double function(double *x, int n, double **args, int *dims); 
+};
+
+CMSSM * MinusLogLikelihood_NPSOL::model; 
+vector<TDenseVector> MinusLogLikelihood_NPSOL::y; 
+vector<TDenseVector> MinusLogLikelihood_NPSOL::z_0; 
+vector<TDenseMatrix> MinusLogLikelihood_NPSOL::P_0; 
+TDenseVector MinusLogLikelihood_NPSOL::initial_prob; 
+
+void * MinusLogLikelihood_NPSOL::function(int *mode, int *n, double *x_array, double *f, double *g, int *nstate)
 {
 	// Make TDenseVector out of x_array
         TDenseVector x(*n); 
@@ -21,12 +45,70 @@ void * MinusLogLikelihood::function(int *mode, int *n, double *x_array, double *
         double minus_log_likelihood=1.0e30;
 	double log_likelihood; 
 	if (model->LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob) == SUCCESS)
-		minus_log_likelihood = -log_likelihood; 
-
-	*f = minus_log_likelihood; 
+		*f = -log_likelihood; 
+	else
+		*f = minus_log_likelihood; 
 }
 
-int CMSSM::Maximize_LogLikelihood(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
+CMSSM * MinusLogLikelihood_CSMINWEL::model;
+vector<TDenseVector> MinusLogLikelihood_CSMINWEL::y;
+vector<TDenseVector> MinusLogLikelihood_CSMINWEL::z_0;
+vector<TDenseMatrix> MinusLogLikelihood_CSMINWEL::P_0;
+TDenseVector MinusLogLikelihood_CSMINWEL::initial_prob;
+
+double MinusLogLikelihood_CSMINWEL::function(double *x_array, int n, double **args, int *dim)
+{
+	TDenseVector x(n);
+        for (unsigned int i=0; i<n; i++)
+                x.SetElement(x_array[i],i);
+	
+	double minus_log_likelihood = 1.0e30, log_likelihood; 
+	if (model->LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob) == SUCCESS)
+		return -log_likelihood;
+	else 
+		return minus_log_likelihood; 
+}
+
+int CMSSM::Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0)
+{
+	if (CheckModelFunctions() != SUCCESS)
+	{
+		log_likelihood_optimal = -1.0e30; 
+		return MODEL_NOT_PROPERLY_SET; 
+	}	
+
+	// Setting MinusLogLikelihood static variables
+	MinusLogLikelihood_CSMINWEL::model = this;
+	MinusLogLikelihood_CSMINWEL::y = y;
+	MinusLogLikelihood_CSMINWEL::z_0 = z_0;
+	MinusLogLikelihood_CSMINWEL::P_0 = P_0;
+	MinusLogLikelihood_CSMINWEL::initial_prob = initial_prob;
+
+	// CSMINWEL
+	size_t n = x0.dim; 
+	TDenseMatrix H(n,n,0.0); 
+	TDenseVector g(n,0.0); 
+	double *x_array, fh, crit; 
+	int itct, nit, fcount, retcodeh; 
+	x_array = new double[n]; 
+	memcpy(x_array, x0.vector, sizeof(double)*n); 
+	crit = 1.0e-3; 
+	nit = 50; 
+
+	H.Identity(n); 
+	g.Zeros(n); 
+	dw_csminwel(&MinusLogLikelihood_CSMINWEL::function,x_array,n,H.matrix,g.vector,NULL,&fh,crit,&itct,nit, &fcount,&retcodeh,NULL,NULL); 
+	
+	x_optimal.Resize(n);
+	for (unsigned int i=0; i<n; i++)
+		x_optimal.SetElement(x_array[i],i); 
+	log_likelihood_optimal = -fh; 
+	delete x_array; 
+	return retcodeh; 
+}
+
+
+int CMSSM::Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
 // Returns
 // 	MODEL_NOT_PROPERLY_SET:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	>=0:	inform code returned by npsol_
@@ -40,11 +122,11 @@ int CMSSM::Maximize_LogLikelihood(double &log_likelihood_optimal, TDenseVector &
 	int error; 
 
 	// Setting MinusLogLikelihood static variables
-	MinusLogLikelihood::model = this; 
-	MinusLogLikelihood::y = y; 
-	MinusLogLikelihood::z_0 = z_0; 
-	MinusLogLikelihood::P_0 = P_0; 
-	MinusLogLikelihood::initial_prob = initial_prob; 
+	MinusLogLikelihood_NPSOL::model = this; 
+	MinusLogLikelihood_NPSOL::y = y; 
+	MinusLogLikelihood_NPSOL::z_0 = z_0; 
+	MinusLogLikelihood_NPSOL::P_0 = P_0; 
+	MinusLogLikelihood_NPSOL::initial_prob = initial_prob; 
 
 	const double INFINITE_BOUND = 1.0E20;
 	const string COLD_START = string("Cold Start");
@@ -92,7 +174,7 @@ int CMSSM::Maximize_LogLikelihood(double &log_likelihood_optimal, TDenseVector &
 	npoptn_((char*)DERIVATIVE_LEVEL.c_str(), DERIVATIVE_LEVEL.length()); 
 	npoptn_((char*)COLD_START.c_str(), COLD_START.length());
 	npoptn_((char*)NO_PRINT_OUT.c_str(), NO_PRINT_OUT.length());
-	npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, MinusLogLikelihood::function, &inform, &iter, istate, c, cJac, clambda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
+	npsol_(&n, &nclin, &ncnln, &ldA, &ldJ, &ldR, A, bl, bu, NULL, MinusLogLikelihood_NPSOL::function, &inform, &iter, istate, c, cJac, clambda, &f, g, R, x_raw, iw, &leniw, w, &lenw); 
 
 	x_optimal.Resize(n); 
 	for (unsigned int i=0; i<n; i++)

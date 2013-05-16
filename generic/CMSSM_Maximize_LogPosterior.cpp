@@ -5,6 +5,18 @@
 
 using namespace std; 
 
+class MinusLogPosterior
+{
+public:
+        static CMSSM *model;
+        static vector<TDenseVector> y;
+        static vector<TDenseVector> z_0;
+        static vector<TDenseMatrix> P_0;
+        static TDenseVector initial_prob;
+
+        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
+};
+
 CMSSM * MinusLogPosterior::model; 
 vector<TDenseVector> MinusLogPosterior::y; 
 vector<TDenseVector> MinusLogPosterior::z_0; 

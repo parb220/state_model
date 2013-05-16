@@ -168,7 +168,7 @@ int main(int argc, char **argv)
 		max_count = 10; 
 		if (if_search_initial) 
 		{
-			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Maximize_LogLikelihood(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
+			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Maximize_LogLikelihood_CSMINWEL(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
 				bad = false; 
 			else 
 				bad = true; 
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 		else 
 		{
 			x0Valid = x0; 
-			if (model.Maximize_LogLikelihood(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
+			if (model.Maximize_LogLikelihood_CSMINWEL(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
 				bad = false; 
 			else 
 				bad = true; 

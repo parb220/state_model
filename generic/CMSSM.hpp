@@ -21,9 +21,6 @@ class StateEquationFunction;
 class TransitionProbMatrixFunction; 
 class MeasurementEquationFunction; 
 class CMSSM; 
-class MinusLogLikelihood;
-class MinusLogPosterior;
-class ObjectiveFunction_Validation;
 
 class PriorDistributionFunction
 {
@@ -177,7 +174,8 @@ public:
 	
 	// Minimize minus log likelihood 
 	// 	Because it calls KalmanFilter, it cannot be constant
-	int Maximize_LogLikelihood(double &minus_log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
+	int Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
+	int Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0); 
  
 	// Calculate log posterior 
 	// 	Because it calls LogLikelihood (which calls KalmanFilter), it cannot be constant
@@ -201,36 +199,5 @@ protected:
 	void ClearMeasurementEquation(); 
 	int CheckModelFunctions() const; 
 }; 
-
-class MinusLogLikelihood
-{
-public:
-        static CMSSM *model;
-        static vector<TDenseVector> y;
-        static vector<TDenseVector> z_0;
-        static vector<TDenseMatrix> P_0;
-        static TDenseVector initial_prob;
-
-        static void *function(int *mode, int*n, double *x, double *f, double *g, int *nstate);
-};
-
-class MinusLogPosterior
-{
-public:
-	static CMSSM *model; 
-	static vector<TDenseVector> y; 
-	static vector<TDenseVector> z_0; 
-	static vector<TDenseMatrix> P_0; 
-	static TDenseVector initial_prob; 
-
-	static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate); 
-};
-
-class ObjectiveFunction_Validation
-{
-public:
-        static CMSSM *model;
-        static void *function(int *mode, int *n, double *x, double *f, double *g, int *nstate);
-};
 
 #endif

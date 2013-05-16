@@ -183,7 +183,8 @@ public:
 
 	// Maximize log posterior
 	// 	Because it calls KalmanFilter, it cannot be constant
-	int Maximize_LogPosterior(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
+	int Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
+	int Maximize_LogPosterior_CSMINWEL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
 
 	// Constructor and destrunctor 
 	CMSSM();

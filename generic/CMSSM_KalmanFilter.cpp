@@ -222,33 +222,41 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 						// So if ey_tm1[t][xi]*Inverse(N_tm1[t][xi])*ey_tm1[t][xi] renders a negative result,
 						// it should be abondoned. 
 
-						double log_abs_determinant = N_tm1[t][xi].LogAbsDeterminant();
-						TDenseVector tempV; 
+						// Cholesky decomposition of N_tm1[t][xi]
+						TDenseMatrix Cholesky_T; 
 						try 
-						{ 	tempV=LeftSolve(N_tm1[t][xi],ey_tm1[t][xi]); }
+						{	Cholesky_T = Cholesky(N_tm1[t][xi]); }
 						catch (...)
 						{
 							log_conditional_likelihood[t].SetElement(MINUS_INFINITY_LOCAL, xi); 
-							TDenseMatrix N = N_tm1[t][xi].GeneralizedInverse(); 
-							z_t[t][xi].Add(z_tm1[t][xi], K*N*ey_tm1[t][xi]); 
-							P_t[t][xi].Subtract(P_tm1[t][xi],K*MultiplyTranspose(N,K)); 
-							// force symmetry
-							P_t[t][xi] = (P_t[t][xi]+Transpose(P_t[t][xi])) * 0.5; 
-							OK_t[t][xi] = true;
+                                                        OK_t[t][xi] = false;
+                                                        continue;
+						}
+						double log_abs_determinant = N_tm1[t][xi].LogAbsDeterminant_Cholesky(Cholesky_T);
+						// double log_abs_determinant = N_tm1[t][xi].LogAbsDeterminant(); 
+						TDenseVector tempV; 
+						try 
+						{ 	tempV=LeftSolve_Cholesky(Cholesky_T, ey_tm1[t][xi]); }
+							// tempV = LeftSolve(N_tm1[t][xi], ey_tm1[t][xi]);  }
+						catch (...)
+						{
+							log_conditional_likelihood[t].SetElement(MINUS_INFINITY_LOCAL, xi); 
+							OK_t[t][xi] = false;
 							continue;  
 						}
 						double inner_product = InnerProduct(ey_tm1[t][xi],tempV); 
-						// computes z_t[t][xi] and P[t][xi]
-						z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
-						// If the program can reach here, then N_tm1[t][xi] is inversible
-						// Therefore tempM should not incurr errors
-						TDenseMatrix tempM = LeftSolve(N_tm1[t][xi],Transpose(K)); 
-						P_t[t][xi].Subtract(P_tm1[t][xi], K*tempM ); 
-						// force symmetry
-						P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
 						if (inner_product >= 0)
 						{
 							log_conditional_likelihood[t].SetElement(CONSTANT - 0.5*(log_abs_determinant+inner_product), xi);
+							// computes z_t[t][xi] and P[t][xi]
+							z_t[t][xi].Add(z_tm1[t][xi], K*tempV);
+							// If the program can reach here, then N_tm1[t][xi] is inversible
+							// Therefore tempM should not incurr errors
+							TDenseMatrix tempM = LeftSolve_Cholesky(Cholesky_T,Transpose(K)); 
+							// TDenseMatrix tempM = LeftSolve(N_tm1[t][xi], Transpose(K)); 
+							P_t[t][xi].Subtract(P_tm1[t][xi], K*tempM ); 
+							// force symmetry
+							P_t[t][xi] = 0.5*(P_t[t][xi] + Transpose(P_t[t][xi]) ); 
 							OK_t[t][xi] = true; 
 						}
 						else

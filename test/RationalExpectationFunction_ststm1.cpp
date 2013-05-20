@@ -4,7 +4,7 @@
 
 using namespace std; 
 
-int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &fixed_parameter, const TDenseVector &x)
+int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x)
 // Microfounded NK model with Rotemburg's adjustment costs
 //
 // Return gensys form for state equation: 
@@ -13,6 +13,9 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 //
 // ERROR_OCCURRED is returned if some A{i} is not of full rank and SUCCESS otherwise.
 {
+	if (fixed_parameter.dim <=0)
+		return MODEL_NOT_PROPERLY_SET; 
+
 	int error_code;  
 	size_t nX=14; 
 	unsigned i=0, j=nX; 
@@ -33,11 +36,11 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 	TDenseVector gsigmai(nRegime,0.0); gsigmai.SetElement(x[i],0); gsigmai.SetElement(x[j],1); i++; j++; 	// Monetary policy
 	double giota = x[i]; 	// ZLB adjustment for level of fall in natural rate of ineterest	
 
-	double glambdaz = fixed_parameter[GLAMBDAZ_STATE];	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
-	double rn = fixed_parameter[RN_STATE];	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
-       	double gpistar = fixed_parameter[GPISTAR_STATE];	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
-        double sc = fixed_parameter[SC_STATE];	// sc, Steady state share of private consumption in C+G
-        double Rlow = fixed_parameter[RLOW_STATE];	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarte	
+	double glambdaz = fixed_parameter[GLAMBDAZ_RE];	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
+	double rn = fixed_parameter[RN_RE];	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
+       	double gpistar = fixed_parameter[GPISTAR_RE];	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
+        double sc = fixed_parameter[SC_RE];	// sc, Steady state share of private consumption in C+G
+        double Rlow = fixed_parameter[RLOW_RE];	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarte	
 
 	double Rstar = gpistar + rn;	// corresponding to i in Zha's notes
 	double gbeta = glambdaz / (1.0+rn);	// 0.995 because gbeta=glambdaz/(1+rn) where rn=4% annually (natural rate of interest or steady state real interest rate)

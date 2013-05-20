@@ -2,7 +2,6 @@
 #include <getopt.h>
 #include <cstdlib>
 #include "CMSSM_Error_Code.hpp"
-#include "findequilibrium.hpp"
 #include "RationalExpectationFunction_ststm1.hpp"
 #include "StateEquationFunction_ststm1.hpp"
 #include "MeasurementEquationFunction_ststm1.hpp"
@@ -49,12 +48,12 @@ int main(int argc, char **argv)
 	}
 
 	// prefixed parameters for state equations
-	TDenseVector state_equation_parameter(5);
-	state_equation_parameter.SetElement(1.005, GLAMBDAZ_STATE);	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
-	state_equation_parameter.SetElement(0.01, RN_STATE);	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
-	state_equation_parameter.SetElement(0.005, GPISTAR_STATE);	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
-	state_equation_parameter.SetElement(0.7, SC_STATE);	// sc, Steady state share of private consumption in C+G
-	state_equation_parameter.SetElement(0.00025, RLOW_STATE);	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e04*4-0.0015 annually
+	TDenseVector rational_expectation_parameter(5);
+	rational_expectation_parameter.SetElement(1.005, GLAMBDAZ_RE);	// glambdaz, Gross rate: (1+2%) annually per capita or (1+0.5%) quarterly per capita 
+	rational_expectation_parameter.SetElement(0.01, RN_RE);	// rn, Net rate: rn=4% annually or 1% quarterly (natural rate of interest or steady state real interest rate)
+	rational_expectation_parameter.SetElement(0.005, GPISTAR_RE);	// gpistar, Net rate: log(1.02) -- 2% annually or 0.5% quarterly
+	rational_expectation_parameter.SetElement(0.7, SC_RE);	// sc, Steady state share of private consumption in C+G
+	rational_expectation_parameter.SetElement(0.00025, RLOW_RE);	// Rlow, Net rate 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e04*4-0.0015 annually
 	
 	// prefixed parameters for measurement equations
 	TDenseVector measurement_equation_parameter(1); 
@@ -82,7 +81,7 @@ int main(int argc, char **argv)
 	size_t nTL = 1; 
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, state_equation_parameter, measurement_equation_parameter, transition_prob_parameter, TDenseVector(), new RationalExpectationFunction_ststm1, new StateEquationFunction_ststm1, new MeasurementEquationFunction_ststm1, new TransitionProbMatrixFunction_ststm1, NULL); 
+	CMSSM model(nL, nTL, nS, new RationalExpectationFunction_ststm1(rational_expectation_parameter), new StateEquationFunction_ststm1(), new MeasurementEquationFunction_ststm1(measurement_equation_parameter), new TransitionProbMatrixFunction_ststm1(transition_prob_parameter), NULL); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	size_t max_count; 

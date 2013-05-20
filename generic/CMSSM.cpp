@@ -8,10 +8,6 @@ CMSSM::CMSSM() :
 nL(0), nTL(0), 
 nS(0), nNu(0), nXi(0), nZeta(0), 
 nZ(0), nY(0), nE(0), nU(0), 
-state_equation_parameter(), 
-measurement_equation_parameter(), 
-transition_prob_parameter(),
-prior_distr_parameter(),
 rational_expectation_function(NULL), 
 state_equation_function(NULL),
 measurement_equation_function(NULL),
@@ -36,14 +32,10 @@ current_x()
 }
 
 
-CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &_sfp, const TDenseVector &_mfp, const TDenseVector &_tpp, const TDenseVector &_priordp, RationalExpectationFunction *_ref, StateEquationFunction *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf, PriorDistributionFunction *_priordf,  const TDenseVector &_cx) :
+CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, RationalExpectationFunction *_ref, StateEquationFunction *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf, PriorDistributionFunction *_priordf,  const TDenseVector &_cx) :
 nL(_nL), nTL(_nTL),
 nS(_nS), 
 nZ(0), nY(0), nE(0), nU(0),
-state_equation_parameter(_sfp), 
-measurement_equation_parameter(_mfp), 
-transition_prob_parameter(_tpp),
-prior_distr_parameter(_priordp), 
 rational_expectation_function(_ref), 
 state_equation_function(_sef),
 measurement_equation_function(_mef),
@@ -79,10 +71,6 @@ nE(right.nE), nU(right.nU),
 A(right.A), B(right.B), C(right.C), Psi(right.Psi), Pi(right.Pi), 
 a(right.a), H(right.H), Phi_u(right.Phi_u), R(right.R),
 b(right.b), F(right.F), Phi_e(right.Phi_e), V(right.V),
-state_equation_parameter(right.state_equation_parameter), 
-measurement_equation_parameter(right.measurement_equation_parameter),
-transition_prob_parameter(right.transition_prob_parameter),
-prior_distr_parameter(right.prior_distr_parameter),
 rational_expectation_function(right.rational_expectation_function),
 state_equation_function(right.state_equation_function), 
 measurement_equation_function(right.measurement_equation_function),
@@ -116,10 +104,6 @@ CMSSM & CMSSM::operator=(const CMSSM &right)
         F = right.F;
         Phi_e = right.Phi_e;
         V = right.V;
-	state_equation_parameter = right.state_equation_parameter; 
-	measurement_equation_parameter = right.measurement_equation_parameter; 
-	transition_prob_parameter = right.transition_prob_parameter; 
-	prior_distr_parameter = right.prior_distr_parameter; 
 	rational_expectation_function = right.rational_expectation_function; 
 	state_equation_function = right.state_equation_function; 
 	measurement_equation_function = right.measurement_equation_function; 

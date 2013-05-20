@@ -3,15 +3,19 @@
 
 #include "CMSSM_Error_Code.hpp"
 #include "CMSSM.hpp"
-#include "findequilibrium.hpp"
+
+const unsigned int GPISTAR_MEASUREMENT = 0;
 
 class MeasurementEquationFunction_ststm1 : public MeasurementEquationFunction
 {
 public:
-	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &fixed_parameter, const TDenseVector &input_x);
+	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &input_x);
+	MeasurementEquationFunction_ststm1() : MeasurementEquationFunction() {}
+	MeasurementEquationFunction_ststm1(const TDenseVector &p) : MeasurementEquationFunction(p) {}
+	virtual ~MeasurementEquationFunction_ststm1() {}
 };
 
-int MeasurementEquationFunction_ststm1::convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &fixed_parameter, const TDenseVector &input_x)
+int MeasurementEquationFunction_ststm1::convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &input_x)
 {
 	for (unsigned int i=0; i<a.size(); i++)
 	{

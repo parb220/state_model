@@ -5,7 +5,7 @@
 
 using namespace std; 
 
-int TransitionProbMatrixFunction_ststm1 :: convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) 
+int TransitionProbMatrixFunction_ststm1 :: convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &x) 
 {
 	if (nS != 4)
 	{

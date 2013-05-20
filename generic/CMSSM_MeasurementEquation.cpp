@@ -25,7 +25,7 @@ int CMSSM::UpdateMeasurementEquationParameter(unsigned int t, const vector<TDens
 			ClearMeasurementEquation(); 
 			return MODEL_NOT_PROPERLY_SET; 
 		}
-		int error_code = measurement_equation_function->convert(a, H, Phi_u, R, measurement_equation_parameter, x);
+		int error_code = measurement_equation_function->convert(a, H, Phi_u, R, x);
 		if (error_code != SUCCESS)
 		{
 			// cerr << "Error occurred during MeasurementEquationFunction call: " << error_code << endl; 

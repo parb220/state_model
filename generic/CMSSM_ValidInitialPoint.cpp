@@ -31,7 +31,7 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 		for (unsigned int i=0; i<*n; i++)
 			x_vector.SetElement(x[i], i); 
 
-		int gensys_err = model->rational_expectation_function->convert(A,B,Psi,Pi,C,model->state_equation_parameter, x_vector);
+		int gensys_err = model->rational_expectation_function->convert(A,B,Psi,Pi,C,x_vector);
 		if (gensys_err)
 			*f = error_return;
 		else 

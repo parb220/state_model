@@ -27,7 +27,7 @@ int CMSSM::UpdateStateEquationParameter(unsigned int t, const vector<TDenseVecto
 			return MODEL_NOT_PROPERLY_SET;
 		}
 		int error_code; 
-		error_code = rational_expectation_function->convert(A,B,Psi,Pi,C,state_equation_parameter, x); 
+		error_code = rational_expectation_function->convert(A,B,Psi,Pi,C,x); 
 		if (error_code != SUCCESS)
 		{
 			// cerr << "Error occurred during RationalExpectationFunction call: " << error_code << endl; 
@@ -39,7 +39,7 @@ int CMSSM::UpdateStateEquationParameter(unsigned int t, const vector<TDenseVecto
 		if (nE != Psi[0][0].cols )
 			nE = Psi[0][0].cols; 
 		
-		error_code = state_equation_function->convert(b,F,Phi_e,V,A,B,Psi,Pi,C,state_equation_parameter,x,nZ,nE,nNu); 
+		error_code = state_equation_function->convert(b,F,Phi_e,V,A,B,Psi,Pi,C,x,nZ,nE,nNu); 
 		if (error_code != SUCCESS)
 		{
 			// cerr << "Error occurred during StateEquationFunction call: " << error_code << endl; 

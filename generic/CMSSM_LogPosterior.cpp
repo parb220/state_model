@@ -18,7 +18,7 @@ int CMSSM::LogPosterior(double &log_posterior, const TDenseVector &x, const vect
 	int likelihood_error = LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob); 
 	if (likelihood_error == SUCCESS)
 	{
-		log_posterior = likelihood_error + prior_distr_function->log_pdf(x,prior_distr_parameter); 
+		log_posterior = likelihood_error + prior_distr_function->log_pdf(x); 
 		return SUCCESS; 
 	}	
 	else 

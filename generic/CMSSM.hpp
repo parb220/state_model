@@ -24,8 +24,13 @@ class CMSSM;
 
 class PriorDistributionFunction
 {
+protected: 
+        TDenseVector fixed_parameter;     
 public:
-	virtual double log_pdf(const TDenseVector &x, const TDenseVector &fixed_parameter) = 0; 
+	virtual double log_pdf(const TDenseVector &x) = 0; 
+	PriorDistributionFunction():fixed_parameter() {}
+	PriorDistributionFunction(const TDenseVector &p) : fixed_parameter(p){}
+	virtual ~PriorDistributionFunction() {}
 };
 
 class RationalExpectationFunction
@@ -44,8 +49,13 @@ class RationalExpectationFunction
 // 	1: some A is not of full rank
 // 	0: success
 {
+protected: 
+	TDenseVector fixed_parameter;  // fixed parameters 
 public:
-	virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &fixed_parameter, const TDenseVector &x)=0; 
+	virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x)=0; 
+	RationalExpectationFunction() : fixed_parameter() {}
+	RationalExpectationFunction(const TDenseVector &p) : fixed_parameter(p){}
+	virtual ~RationalExpectationFunction() {}
 };
 
 class StateEquationFunction
@@ -63,8 +73,13 @@ class StateEquationFunction
 // 	0: success 
 // 	1: otherwise
 {
+protected: 
+	TDenseVector fixed_parameter; 
 public:
-	virtual int convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &fixed_parameter, const TDenseVector &x, size_t, size_t, size_t)=0;
+	virtual int convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t, size_t, size_t)=0;
+	StateEquationFunction() : fixed_parameter() {}
+	StateEquationFunction(const TDenseVector &p) : fixed_parameter(p) {}
+	virtual ~StateEquationFunction() {}
 };
 
 class MeasurementEquationFunction
@@ -81,8 +96,13 @@ class MeasurementEquationFunction
 // 	0: success 
 // 	1: otherwise 
 {
+protected: 
+	TDenseVector fixed_parameter; 
 public:
-	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &fixed_parameter, const TDenseVector &x)=0; 
+	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x)=0; 
+	MeasurementEquationFunction() : fixed_parameter() {}
+	MeasurementEquationFunction(const TDenseVector &p) : fixed_parameter(p) {}
+	virtual ~MeasurementEquationFunction() {}
 }; 
 
 class TransitionProbMatrixFunction
@@ -103,8 +123,13 @@ class TransitionProbMatrixFunction
 // 	SUCCESS: success
 // 	ERROR_OCCURRED: error_occurred
 {
+protected: 
+	TDenseVector fixed_parameter; 
 public:
-	virtual int convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &fixed_parameter, const TDenseVector &x) = 0; 
+	virtual int convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &x) = 0; 
+	TransitionProbMatrixFunction() : fixed_parameter() {}
+	TransitionProbMatrixFunction(const TDenseVector &p) : fixed_parameter(p) {}
+	virtual ~TransitionProbMatrixFunction() {}
 };
 
 //== Reigme (Markov) swithcing state model ==
@@ -145,11 +170,13 @@ protected:
 					// and transition probability matrix
 
 public:
-	// fixed parameters
-	TDenseVector state_equation_parameter;	// parameters to be used in state equations
+	// fixed parameters exterior to CMSSM
+	/*
+ 	TDenseVector state_equation_parameter;	// parameters to be used in state equations
 	TDenseVector measurement_equation_parameter;	// parameters to be used in measurement equations
 	TDenseVector transition_prob_parameter;	// parameters to be used in transition prob
 	TDenseVector prior_distr_parameter; 	// parameters to be used in specifying prior distribution functions 
+	*/
 
 	// functions used to specify rationa expectation model, state model, and transition prob matrix
 	RationalExpectationFunction *rational_expectation_function;
@@ -188,7 +215,12 @@ public:
 
 	// Constructor and destrunctor 
 	CMSSM();
+	// fixed parameters are exterior to CMSSM
+	CMSSM(size_t _nL, size_t _nTL, size_t _nS, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector());
+ 	/*
 	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &, const TDenseVector &, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector()); 
+ 	*/
+	
 	CMSSM(const CMSSM &right); 
 	CMSSM &operator=(const CMSSM &right); 
 	~CMSSM() {}

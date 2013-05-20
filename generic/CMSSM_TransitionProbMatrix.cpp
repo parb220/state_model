@@ -7,7 +7,7 @@ int CMSSM::GetTranstionProbMatrix(TDenseMatrix &Q, unsigned int t, const vector<
 {
 	if (transition_prob_function == NULL)
 		return MODEL_NOT_PROPERLY_SET; 
-	else if (transition_prob_function->convert(Q, t, y, nS, nTL, transition_prob_parameter, x) == SUCCESS)
+	else if (transition_prob_function->convert(Q, t, y, nS, nTL, x) == SUCCESS)
 		return SUCCESS;   
 	else 
 		return ERROR_OCCURRED;  

@@ -4,7 +4,7 @@
 
 using namespace std; 
 
-int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &fixed_parameter, const TDenseVector &x, size_t nZ, size_t nE, size_t nNu)
+int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nE, size_t nNu)
 // Return value of error has the following meaning
 // 	SUCCESS: success
 // 	1: some A returned by MakeABPsiPiC is not invertible

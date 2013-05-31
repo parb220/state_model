@@ -1,10 +1,10 @@
 #include <cmath>
 #include "CMSSM_Error_Code.hpp"
-#include "StateEquationFunction_ststm1.hpp"
+#include "StateEquationFunction_test.hpp"
 
 using namespace std; 
 
-int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nE, size_t nExpectation, size_t nNu)
+int StateEquationFunction_test::convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nE, size_t nExpectation, size_t nNu)
 // Return value of error has the following meaning
 // 	SUCCESS: success
 // 	1: some A returned by MakeABPsiPiC is not invertible
@@ -62,23 +62,20 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	TDenseMatrix I; I.Identity(nZ); 
 
 	// Multiply by inverse of A
-	TDenseMatrix A00InvPi00, A10InvPi10, A11InvPi11, A01InvPi01; 
-	TDenseMatrix A00InvB00, A10InvB10, A11InvB11, A01InvB01; 
-	TDenseMatrix A00InvPsi00, A01InvPsi01, A11InvPsi11, A10InvPsi10; 
-	A00InvPi00 = LeftSolve(A[0][0], Pi[0][0]); 
-	A10InvPi10 = LeftSolve(A[1][0], Pi[1][0]);	// ??? Pi[1][0] or Pi[0][0] 
-	A11InvPi11 = LeftSolve(A[1][1], Pi[1][1]); 
-	A01InvPi01 = LeftSolve(A[0][1], Pi[0][1]); 
+	TDenseMatrix A00InvPi00 = LeftSolve(A[0][0], Pi[0][0]); 
+	TDenseMatrix A10InvPi10 = LeftSolve(A[1][0], Pi[1][0]);	// ??? Pi[1][0] or Pi[0][0] 
+	TDenseMatrix A11InvPi11 = LeftSolve(A[1][1], Pi[1][1]); 
+	TDenseMatrix A01InvPi01 = LeftSolve(A[0][1], Pi[0][1]); 
 
-	A00InvB00 = LeftSolve(A[0][0], B[0][0]); 
-	A10InvB10 = LeftSolve(A[1][0], B[1][0]); 
-	A11InvB11 = LeftSolve(A[1][1], B[1][1]); 
-	A01InvB01 = LeftSolve(A[0][1], B[0][1]); 
+	TDenseMatrix A00InvB00 = LeftSolve(A[0][0], B[0][0]); 
+	TDenseMatrix A10InvB10 = LeftSolve(A[1][0], B[1][0]); 
+	TDenseMatrix A11InvB11 = LeftSolve(A[1][1], B[1][1]); 
+	TDenseMatrix A01InvB01 = LeftSolve(A[0][1], B[0][1]); 
 
-	A00InvPsi00 = LeftSolve(A[0][0], Psi[0][0]); 
-	A01InvPsi01 = LeftSolve(A[0][1], Psi[0][1]); 
-	A11InvPsi11 = LeftSolve(A[1][1], Psi[1][1]); 
-	A10InvPsi10 = LeftSolve(A[1][0], Psi[1][0]);
+	TDenseMatrix A00InvPsi00 = LeftSolve(A[0][0], Psi[0][0]); 
+	TDenseMatrix A01InvPsi01 = LeftSolve(A[0][1], Psi[0][1]); 
+	TDenseMatrix A11InvPsi11 = LeftSolve(A[1][1], Psi[1][1]); 
+	TDenseMatrix A10InvPsi10 = LeftSolve(A[1][0], Psi[1][0]);
 
 	// Annihilators
 	TDenseMatrix V0a, V1a; 
@@ -109,9 +106,9 @@ int StateEquationFunction_ststm1::convert(vector<TDenseVector> &b, vector<TDense
 	if (V1a.rows == 0)	
 	{
 		N11.Identity(nExpectation); 
-		M11.Initialize(0.0, nExpectation, nZ); 
+		M11.Zeros(nExpectation, nZ); 
 		N10.Identity(nExpectation); 
-		M10.Initialize(0.0, nExpectation, nZ); 
+		M10.Zeros(nExpectation, nZ); 
 	}
 	else 
 	{

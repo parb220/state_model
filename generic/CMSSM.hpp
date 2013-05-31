@@ -51,8 +51,9 @@ class RationalExpectationFunction
 {
 protected: 
 	TDenseVector fixed_parameter;  // fixed parameters 
+	virtual void ConvertXtoParameter(const TDenseVector &x) = 0; 
 public:
-	virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x)=0; 
+	virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nY, size_t nU, size_t nE, size_t nExpectation)=0; 
 	RationalExpectationFunction() : fixed_parameter() {}
 	RationalExpectationFunction(const TDenseVector &p) : fixed_parameter(p){}
 	virtual ~RationalExpectationFunction() {}
@@ -75,8 +76,9 @@ class StateEquationFunction
 {
 protected: 
 	TDenseVector fixed_parameter; 
+	virtual void ConvertXtoParameter(const TDenseVector &x) = 0; 
 public:
-	virtual int convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t, size_t, size_t)=0;
+	virtual int convert(vector<TDenseVector> &b, vector<TDenseMatrix> &F, vector<TDenseMatrix> &Phi_e, vector<TDenseMatrix> &V, const vector<vector<TDenseMatrix> > &A, const vector<vector<TDenseMatrix> > &B, const vector<vector<TDenseMatrix> > &Psi, const vector<vector<TDenseMatrix> >&Pi, const vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nE, size_t nExpectation, size_t nNu)=0;
 	StateEquationFunction() : fixed_parameter() {}
 	StateEquationFunction(const TDenseVector &p) : fixed_parameter(p) {}
 	virtual ~StateEquationFunction() {}
@@ -98,8 +100,9 @@ class MeasurementEquationFunction
 {
 protected: 
 	TDenseVector fixed_parameter; 
+	virtual void ConvertXtoParameter(const TDenseVector &x) = 0; 
 public:
-	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x)=0; 
+	virtual int convert(vector<TDenseVector> &a, vector<TDenseMatrix> &H, vector<TDenseMatrix> &Phi_u, vector<TDenseMatrix> &R, const TDenseVector &x, size_t nZ, size_t nY, size_t nU, size_t nNu)=0; 
 	MeasurementEquationFunction() : fixed_parameter() {}
 	MeasurementEquationFunction(const TDenseVector &p) : fixed_parameter(p) {}
 	virtual ~MeasurementEquationFunction() {}
@@ -125,6 +128,7 @@ class TransitionProbMatrixFunction
 {
 protected: 
 	TDenseVector fixed_parameter; 
+	virtual void ConvertXtoParameter(const TDenseVector &x) = 0; 
 public:
 	virtual int convert(TDenseMatrix &Q, unsigned int t, const vector<TDenseVector> &y, size_t nS, size_t nTL, const TDenseVector &x) = 0; 
 	TransitionProbMatrixFunction() : fixed_parameter() {}
@@ -136,6 +140,9 @@ public:
 class CMSSM
 {
 public:
+	static double MINUS_INFINITY_LOCAL; 
+	virtual const double & MinusInfinity() const { return MINUS_INFINITY_LOCAL; }
+public:
 	// Parameters
 	size_t nL;	// number of lagged regimes that enter the measurement or state equations
 	size_t nTL;	// total number of lagged regimes to track
@@ -143,10 +150,12 @@ public:
 	size_t nNu;	// == nS^lags, number of regimes affecting coefficients
 	size_t nXi;	// == nS^(total_lags+1), total number of regimes being tracked
 	size_t nZeta;	// == nS^total_lags; 
+
 	size_t nZ;	// number of state variables
 	size_t nY;	// number of measurement variables
 	size_t nU;	// number of noise variables in measurement
-	size_t nE; 	// number of noise variables in state 
+	size_t nE; 	// number of shocks 
+	size_t nExpectation;	// number of expectations 
 
 protected:
 	vector<vector<TDenseMatrix> >A; //
@@ -197,26 +206,26 @@ public:
 
 	// Calculate log likelihood
 	// 	Because it calls KalmanFilter, it cannot be constatn
-	int LogLikelihood(double &log_likelihood, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
+	virtual int LogLikelihood(double &log_likelihood, vector<TDenseVector> &z_tm1_last, vector<TDenseMatrix> &P_tm1_last, TDenseVector &p_tm1_last, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
 	
 	// Minimize minus log likelihood 
 	// 	Because it calls KalmanFilter, it cannot be constant
-	int Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
-	int Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0); 
+	virtual int Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);	
+	virtual int Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0); 
  
 	// Calculate log posterior 
 	// 	Because it calls LogLikelihood (which calls KalmanFilter), it cannot be constant
-	int LogPosterior(double &log_posterior, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
+	virtual int LogPosterior(double &log_posterior, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob); 
 
 	// Maximize log posterior
 	// 	Because it calls KalmanFilter, it cannot be constant
-	int Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
-	int Maximize_LogPosterior_CSMINWEL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
+	virtual int Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
+	virtual int Maximize_LogPosterior_CSMINWEL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
 
 	// Constructor and destrunctor 
 	CMSSM();
 	// fixed parameters are exterior to CMSSM
-	CMSSM(size_t _nL, size_t _nTL, size_t _nS, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector());
+	CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nU, size_t _nE, size_t _nExpectation, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector());
  	/*
 	CMSSM(size_t _nL, size_t _nTL, size_t _nS, const TDenseVector &, const TDenseVector &, const TDenseVector &, const TDenseVector &, RationalExpectationFunction * =NULL, StateEquationFunction * =NULL, MeasurementEquationFunction * =NULL, TransitionProbMatrixFunction * =NULL, PriorDistributionFunction * = NULL, const TDenseVector & =TDenseVector()); 
  	*/

@@ -6,6 +6,8 @@
 
 using namespace std; 
 
+double CMSSM::MINUS_INFINITY_LOCAL; 
+
 class ObjectiveFunction_Validation
 {
 public:
@@ -18,7 +20,7 @@ CMSSM *ObjectiveFunction_Validation::model;
 void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, double *f, double *g, int *nstate)
 // A return value less than zero means that regime 1 is determinate.
 {
-	double error_return = 1.0e10;
+	double error_return = -CMSSM::MINUS_INFINITY_LOCAL;  
 	if (!model)
 		*f = error_return; 
 	else 
@@ -26,18 +28,22 @@ void *ObjectiveFunction_Validation::function(int *mode, int *n, double *x, doubl
 		vector<vector<TDenseMatrix> > A, B, Psi, Pi; 
 		vector<vector<TDenseVector> > C; 
 
+		size_t nZ = model->nZ;  
+		size_t nY = model->nY; 
+		size_t nU = model->nU; 
+		size_t nE = model->nE; 
+		size_t nExpectation = model->nExpectation; 
+
 		// Make a TDenseVector object, x_vector, to copy the content of x 
 		TDenseVector x_vector(*n); 
 		for (unsigned int i=0; i<*n; i++)
 			x_vector.SetElement(x[i], i); 
 
-		int gensys_err = model->rational_expectation_function->convert(A,B,Psi,Pi,C,x_vector);
+		int gensys_err = model->rational_expectation_function->convert(A,B,Psi,Pi,C,x_vector,nZ,nY,nU,nE,nExpectation);
 		if (gensys_err)
 			*f = error_return;
 		else 
 		{	 
-			size_t nZ = A[0][0].rows; 
-			size_t nExpectation = Pi[0][0].cols; 
 			TDenseMatrix V0a; 
 			TDenseVector E0a; 
 			Annihilator(V0a, E0a, LeftSolve(A[0][0], B[0][0])); 
@@ -91,7 +97,7 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
 		return MODEL_NOT_PROPERLY_SET; 
 
 	int error;
-	const double INFINITE_BOUND = 1.0E20; 
+	const double INFINITE_BOUND = -MINUS_INFINITY_LOCAL; 
 	const double TOLERANCE = 0.0; 
 	const string COLD_START = string("Cold Start"); 
 	const string NO_PRINT_OUT = string("Major print level = 0");
@@ -152,7 +158,7 @@ int CMSSM::ValidInitialPoint(TDenseVector &fval, TDenseVector &x_optimal, const 
  	ObjectiveFunction_Validation::model = this; 
 	// Below is a revision based on Dan's code
 	// We try a number, max_count, of times and finds the best solution
-	double best_value = 1.0e10; 
+	double best_value = -MINUS_INFINITY_LOCAL; 
 	double *best_x = new double[n];
 	while (count < max_count)
 	{

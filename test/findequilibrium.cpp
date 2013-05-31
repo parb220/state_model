@@ -72,16 +72,21 @@ int main(int argc, char **argv)
 		abort(); 
 	}
 	size_t nSample = qdata.size(); 	// total sample size
-	size_t nY = qdata[0].dim;	// number of observables
 	/* Read in data: end */
 	
 	// sizes
 	size_t nS = 4; 
 	size_t nL = 1; 
 	size_t nTL = 1; 
+	size_t nZ = 7; 
+	size_t nY = qdata[0].dim;	// number of observables
+	size_t nE = 3; 
+	size_t nU = 0; 
+	size_t nExpectation = 2; 
 
+	CMSSM::MINUS_INFINITY_LOCAL = -1.0e30; 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, new RationalExpectationFunction_ststm1(rational_expectation_parameter), new StateEquationFunction_ststm1(), new MeasurementEquationFunction_ststm1(measurement_equation_parameter), new TransitionProbMatrixFunction_ststm1(transition_prob_parameter), NULL); 
+	CMSSM model(nL, nTL, nS, nZ, nY, nU, nE, nExpectation, new RationalExpectationFunction_ststm1(rational_expectation_parameter), new StateEquationFunction_ststm1(), new MeasurementEquationFunction_ststm1(measurement_equation_parameter), new TransitionProbMatrixFunction_ststm1(transition_prob_parameter), NULL); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	size_t max_count; 
@@ -124,7 +129,6 @@ int main(int argc, char **argv)
 	}
 
 	/* Maximize log-likelihood */
-	const double MINUS_INFINITY = -1.0e30; 
 
 	unsigned int i=0, number_bad=0; 
 	bool bad; 
@@ -132,7 +136,7 @@ int main(int argc, char **argv)
 	TDenseVector xOptimal(nFree); 
 
 	TDenseVector best_solution(nFree+1, 0.0);
-	best_solution.SetElement(MINUS_INFINITY, 0); 
+	best_solution.SetElement(CMSSM::MINUS_INFINITY, 0); 
 	vector<TDenseVector> solutions; 
 	bool if_search_initial;  
 	if (initialX.empty())
@@ -154,7 +158,7 @@ int main(int argc, char **argv)
 
 	while (i < initialX.size() && number_bad < 200)
 	{
-		solutions[i].SetElement(MINUS_INFINITY, 0); 
+		solutions[i].SetElement(CMSSM::MINUS_INFINITY_LOCAL, 0); 
 		bad = true; 
 		
 		// Find valid starting value 

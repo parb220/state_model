@@ -68,16 +68,20 @@ int main(int argc, char **argv)
 		abort(); 
 	}
 	size_t nSample = qdata.size(); 	// total sample size
-	size_t nY = qdata[0].dim;	// number of observables
 	/* Read in data: end */
 	
 	// sizes
 	size_t nS = 4; 
 	size_t nL = 1; 
 	size_t nTL = 1; 
+	size_t nZ = 7; 
+	size_t nY = qdata[0].dim;	// number of observables
+	size_t nU = 0; 
+	size_t nE = 3; 
+	size_t nExpectation = 2; 
 
 	// Setting up the CMSSM model
-	CMSSM model(nL, nTL, nS, new RationalExpectationFunction_ststm1(rational_expectation_parameter), new StateEquationFunction_ststm1(), new MeasurementEquationFunction_ststm1(measurement_equation_parameter), new TransitionProbMatrixFunction_ststm1(transition_prob_parameter), NULL); 
+	CMSSM model(nL, nTL, nS, nZ, nY, nU, nE, nExpectation, new RationalExpectationFunction_ststm1(rational_expectation_parameter), new StateEquationFunction_ststm1(), new MeasurementEquationFunction_ststm1(measurement_equation_parameter), new TransitionProbMatrixFunction_ststm1(transition_prob_parameter), NULL); 
 
 	size_t nFree = 23+8+2; // 23: model parameters; 6=2X3+2: sunspot parameters with 2 endogenous errors and 3 fundamental shocks; 2: probability of staying in ZLB
 	size_t max_count; 
@@ -106,9 +110,12 @@ int main(int argc, char **argv)
 
 	/* Calculate log-likelihood */
 	double log_likelihood; 
+	vector<TDenseVector>z_tm1_last; 
+	vector<TDenseMatrix>P_tm1_last; 
+	TDenseVector p_tm1_last; 
 	for (unsigned int i=0; i<initialX.size(); i++)
 	{
-		if (model.LogLikelihood(log_likelihood, initialX[i], qdata, z0, P0, initial_prob) == SUCCESS)
+		if (model.LogLikelihood(log_likelihood, z_tm1_last, P_tm1_last, p_tm1_last, initialX[i], qdata, z0, P0, initial_prob) == SUCCESS)
 			cout << "Log Likelihood " << log_likelihood << endl; 
 		else 
 			cout << "Error occurred when calculating log_likelihood.\n"; 

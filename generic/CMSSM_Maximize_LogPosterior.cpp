@@ -4,7 +4,6 @@
 #include "optimization.hpp"
 
 using namespace std; 
-
 class MinusLogPosterior_NPSOL
 {
 public:
@@ -42,7 +41,7 @@ void * MinusLogPosterior_NPSOL::function(int *mode, int *n, double *x_array, dou
 	for (unsigned int i=0; i<*n; i++)
 		x.SetElement(x_array[i],i); 
 
-        double minus_log_posterior=1.0e30;
+        double minus_log_posterior= -CMSSM::MINUS_INFINITY_LOCAL;
 	double log_posterior;
 	if (model->LogPosterior(log_posterior, x, y, z_0, P_0, initial_prob) == SUCCESS)
 		minus_log_posterior = -log_posterior; 
@@ -62,7 +61,7 @@ double MinusLogPosterior_CSMINWEL::function(double *x_array, int n, double **arg
 	for (unsigned int i=0; i<n; i++)
 		x.SetElement(x_array[i],i); 
 
-	double minus_log_posterior = 1.0e30, log_posterior; 
+	double minus_log_posterior = -CMSSM::MINUS_INFINITY_LOCAL, log_posterior; 
 	if (model->LogPosterior(log_posterior, x, y, z_0, P_0, initial_prob) == SUCCESS)
 		return -log_posterior; 
 	else 
@@ -76,7 +75,7 @@ int CMSSM::Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVect
 {
 	if (prior_distr_function == NULL || CheckModelFunctions() != SUCCESS)
 	{
-		log_posterior_optimal = -1.0e30; 
+		log_posterior_optimal = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
  
@@ -89,7 +88,7 @@ int CMSSM::Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVect
 	MinusLogPosterior_NPSOL::P_0 = P_0; 
 	MinusLogPosterior_NPSOL::initial_prob = initial_prob; 
 
-	const double INFINITE_BOUND = 1.0E20;
+	const double INFINITE_BOUND = -MINUS_INFINITY_LOCAL ;
 	const string COLD_START = string("Cold Start");
 	const string NO_PRINT_OUT = string("Major print level = 0"); 
 	const string DERIVATIVE_LEVEL = string("Derivative level = 0"); 
@@ -176,7 +175,7 @@ int CMSSM::Maximize_LogPosterior_CSMINWEL(double &log_posterior_optimal, TDenseV
 {
 	if (prior_distr_function == NULL || CheckModelFunctions() != SUCCESS)
 	{
-		log_posterior_optimal = -1.0e30; 
+		log_posterior_optimal = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
 

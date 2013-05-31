@@ -42,9 +42,12 @@ void * MinusLogLikelihood_NPSOL::function(int *mode, int *n, double *x_array, do
 	for (unsigned int i=0; i<*n; i++)
 		x.SetElement(x_array[i],i); 
 
-        double minus_log_likelihood=1.0e30;
+        double minus_log_likelihood= -CMSSM::MINUS_INFINITY_LOCAL; 
 	double log_likelihood; 
-	if (model->LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob) == SUCCESS)
+	vector<TDenseVector> z_tm1_last; 
+	vector<TDenseMatrix> P_tm1_last; 
+	TDenseVector p_tm1_last; 
+	if (model->LogLikelihood(log_likelihood, z_tm1_last, P_tm1_last, p_tm1_last, x, y, z_0, P_0, initial_prob) == SUCCESS)
 		*f = -log_likelihood; 
 	else
 		*f = minus_log_likelihood; 
@@ -62,18 +65,21 @@ double MinusLogLikelihood_CSMINWEL::function(double *x_array, int n, double **ar
         for (unsigned int i=0; i<n; i++)
                 x.SetElement(x_array[i],i);
 	
-	double minus_log_likelihood = 1.0e30, log_likelihood; 
-	if (model->LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob) == SUCCESS)
+	double minus_log_likelihood = -CMSSM::MINUS_INFINITY_LOCAL, log_likelihood; 
+	vector<TDenseVector> z_tm1_last; 
+	vector<TDenseMatrix> P_tm1_last; 
+	TDenseVector p_tm1_last; 
+	if (model->LogLikelihood(log_likelihood, z_tm1_last, P_tm1_last, p_tm1_last, x, y, z_0, P_0, initial_prob) == SUCCESS)
 		return -log_likelihood;
 	else 
 		return minus_log_likelihood; 
 }
 
-int CMSSM::Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0)
+int CMSSM::Maximize_LogLikelihood_CSMINWEL(double &log_likelihood_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
 {
 	if (CheckModelFunctions() != SUCCESS)
 	{
-		log_likelihood_optimal = -1.0e30; 
+		log_likelihood_optimal = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}	
 
@@ -115,7 +121,7 @@ int CMSSM::Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVe
 {
 	if (CheckModelFunctions() != SUCCESS)
 	{
-		log_likelihood_optimal = -1.0e30; 
+		log_likelihood_optimal = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
  
@@ -128,7 +134,7 @@ int CMSSM::Maximize_LogLikelihood_NPSOL(double &log_likelihood_optimal, TDenseVe
 	MinusLogLikelihood_NPSOL::P_0 = P_0; 
 	MinusLogLikelihood_NPSOL::initial_prob = initial_prob; 
 
-	const double INFINITE_BOUND = 1.0E20;
+	const double INFINITE_BOUND = -MINUS_INFINITY_LOCAL;
 	const string COLD_START = string("Cold Start");
 	const string NO_PRINT_OUT = string("Major print level = 0"); 
 	const string DERIVATIVE_LEVEL = string("Derivative level = 0"); 

@@ -1,0 +1,44 @@
+//-------------------
+
+A(1,1) = 1.;
+A(1,2) = Tau;
+A(1,4) = -1.*Tau;
+A(1,6) = -1.*Thetaf;
+A(1,5) = -1.*Tau;
+A(0,1) = -1.*Kappac;
+A(0,0) = 1.;
+A(0,3) = -1.;
+A(0,5) = -1.*Omegaf;
+A(2,1) = -1.*Phiy*(1. - 1.*Rhoi1);
+A(2,0) = -1.*PhiDoubledPi*(1. - 1.*Rhoi1);
+A(2,2) = 1.;
+A(3,4) = 1.;
+A(4,3) = 1.;
+A(5,0) = 1.;
+A(6,1) = 1.;
+
+//-------------------
+
+B(1,1) = Thetab;
+B(0,0) = Omegab;
+B(2,2) = Rhoi1;
+B(3,4) = Rhorn1;
+B(4,3) = RhoMu1;
+B(5,5) = 1.;
+B(6,6) = 1.;
+
+//-------------------
+
+CapitalGammau(2,2) = Sigmai1;
+CapitalGammau(3,0) = Sigmarn1;
+CapitalGammau(4,1) = SigmaMu1;
+
+//-------------------
+
+CapitalGammaeta(5,0) = 1.;
+CapitalGammaeta(6,1) = 1.;
+
+//-------------------
+
+
+//=== End ===

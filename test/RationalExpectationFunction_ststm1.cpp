@@ -4,7 +4,7 @@
 
 using namespace std; 
 
-int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x)
+int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &x, size_t nZ, size_t nY, size_t nU, size_t nE, size_t nExpectation)
 // Microfounded NK model with Rotemburg's adjustment costs
 //
 // Return gensys form for state equation: 
@@ -16,7 +16,7 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 	if (fixed_parameter.dim <=0)
 		return MODEL_NOT_PROPERLY_SET; 
 
-	int error_code;  
+	int error_code = SUCCESS;   
 	size_t nX=14; 
 	unsigned i=0, j=nX; 
 	size_t nRegime = 2; 
@@ -49,7 +49,6 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 	TDenseVector crn(nRegime,0.0); crn.SetElement((1.0-grhorn[1])*(giota-Rstar),1);
 	TDenseVector gchir(nRegime,0.0); gchir.SetElement(1.0,0); 
 
-	size_t n_ = 7; 
 	A.resize(nRegime); 
 	B.resize(nRegime); 
 	C.resize(nRegime); 
@@ -65,7 +64,7 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 		Pi[i].resize(nRegime); 
 		for (unsigned int j=0; j<nRegime; j++)
 		{
-			A[i][j].Resize(n_, n_); 
+			A[i][j].Resize(nZ, nZ); 
 			A[i][j].Zeros(); 
 			A[i][j].SetElement(1.0+gbeta*ggamma[i],0,0); 
 			A[i][j].SetElement(-gpsi2[i]*(geta+gsigma/sc),0,1);
@@ -85,7 +84,7 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 			A[i][j].SetElement(1.0,5,0);
 			A[i][j].SetElement(1.0,6,1);
 
-			B[i][j].Resize(n_,n_); 
+			B[i][j].Resize(nZ, nZ); 
 			B[i][j].Zeros(); 
 			B[i][j].SetElement(ggamma[j],0,0);
 			B[i][j].SetElement(-gpsi2[j]*(gsigma-1.0)*b[j]/sc,0,1);	
@@ -96,25 +95,25 @@ int RationalExpectationFunction_ststm1::convert(vector<vector<TDenseMatrix> > &A
 			B[i][j].SetElement(1.0,5,5);
 			B[i][j].SetElement(1.0,6,6);
 
-			C[i][j].Resize(n_);
+			C[i][j].Resize(nZ);
 			C[i][j].Zeros();  
 			C[i][j].SetElement(ci[i],2); 
 			C[i][j].SetElement(crn[i],3);
 
-			Psi[i][j].Resize(n_,3);
+			Psi[i][j].Resize(nZ,nE);
 			Psi[i][j].Zeros();  
 			Psi[i][j].SetElement(gsigmai[i],2,2);
 			Psi[i][j].SetElement(gsigmarn[i],3,0);
 			Psi[i][j].SetElement(gsigmamu[i],4,1);
 			
-			Pi[i][j].Resize(n_,2);
+			Pi[i][j].Resize(nZ,nExpectation);
 			Pi[i][j].Zeros();  
 			Pi[i][j].SetElement(1.0,5,0);
 			Pi[i][j].SetElement(1.0,6,1);
 
-			if (Rank(A[i][j]) < n_)
+			if (Rank(A[i][j]) < nZ)
 				error_code = ERROR_OCCURRED;  
 		}
 	}
-	return SUCCESS;
+	return error_code;  
 }

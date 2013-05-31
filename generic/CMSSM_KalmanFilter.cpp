@@ -54,7 +54,6 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 // Values inferred from input parameters and CMSSM inherent parameters
 // 	T:	y.size(), number of time points for which measurments are available
 {
-	const double MINUS_INFINITY_LOCAL = -1.0e30; 
 	const double CONSTANT = -0.918938533204673*nY; 
 	
 	if (CheckModelFunctions() != SUCCESS) 

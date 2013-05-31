@@ -1,0 +1,12 @@
+//-------------------
+
+ameasure(0) = DoubledPistar;
+ameasure(2) = iss;
+
+//-------------------
+
+Hmeasure(0,0) = 1.;
+Hmeasure(1,1) = 1.;
+Hmeasure(2,2) = 1.;
+
+//=== End ===

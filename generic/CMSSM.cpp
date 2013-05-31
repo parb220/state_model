@@ -7,7 +7,7 @@ using namespace std;
 CMSSM::CMSSM() :
 nL(0), nTL(0), 
 nS(0), nNu(0), nXi(0), nZeta(0), 
-nZ(0), nY(0), nE(0), nU(0), 
+nZ(0), nY(0), nE(0), nU(0), nExpectation(0),  
 rational_expectation_function(NULL), 
 state_equation_function(NULL),
 measurement_equation_function(NULL),
@@ -32,10 +32,10 @@ current_x()
 }
 
 
-CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, RationalExpectationFunction *_ref, StateEquationFunction *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf, PriorDistributionFunction *_priordf,  const TDenseVector &_cx) :
+CMSSM::CMSSM(size_t _nL, size_t _nTL, size_t _nS, size_t _nZ, size_t _nY, size_t _nU, size_t _nE, size_t _nExpectation,  RationalExpectationFunction *_ref, StateEquationFunction *_sef, MeasurementEquationFunction *_mef, TransitionProbMatrixFunction *_tpmf, PriorDistributionFunction *_priordf,  const TDenseVector &_cx) :
 nL(_nL), nTL(_nTL),
 nS(_nS), 
-nZ(0), nY(0), nE(0), nU(0),
+nZ(_nZ), nY(_nY), nE(_nE), nU(_nU), nExpectation(_nExpectation), 
 rational_expectation_function(_ref), 
 state_equation_function(_sef),
 measurement_equation_function(_mef),
@@ -66,8 +66,7 @@ current_x(_cx)
 CMSSM::CMSSM(const CMSSM &right) :
 nL(right.nL), nTL(right.nTL),
 nS(right.nS), nNu(right.nNu), nXi(right.nXi), nZeta(right.nZeta),
-nZ(right.nZ), nY(right.nY),
-nE(right.nE), nU(right.nU),
+nZ(right.nZ), nY(right.nY), nE(right.nE), nU(right.nU), nExpectation(right.nExpectation), 
 A(right.A), B(right.B), C(right.C), Psi(right.Psi), Pi(right.Pi), 
 a(right.a), H(right.H), Phi_u(right.Phi_u), R(right.R),
 b(right.b), F(right.F), Phi_e(right.Phi_e), V(right.V),
@@ -91,6 +90,7 @@ CMSSM & CMSSM::operator=(const CMSSM &right)
         nY = right.nY;
         nE = right.nE;
         nU = right.nU;
+	nExpectation = right.nExpectation; 
 	A = right.A; 
 	B = right.B; 
 	C = right.C; 

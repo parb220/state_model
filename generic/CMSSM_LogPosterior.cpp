@@ -11,19 +11,22 @@ int CMSSM::LogPosterior(double &log_posterior, const TDenseVector &x, const vect
 {
 	if (prior_distr_function == NULL || CheckModelFunctions() != SUCCESS)
 	{
-		log_posterior = -1.0e30; 
+		log_posterior = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
 	double log_likelihood; 
-	int likelihood_error = LogLikelihood(log_likelihood, x, y, z_0, P_0, initial_prob); 
+	vector<TDenseVector> z_tm1_last; 
+	vector<TDenseMatrix> P_tm1_last; 
+	TDenseVector p_tm1_last; 
+	int likelihood_error = LogLikelihood(log_likelihood, z_tm1_last, P_tm1_last, p_tm1_last, x, y, z_0, P_0, initial_prob); 
 	if (likelihood_error == SUCCESS)
 	{
-		log_posterior = likelihood_error + prior_distr_function->log_pdf(x); 
+		log_posterior = log_likelihood + prior_distr_function->log_pdf(x); 
 		return SUCCESS; 
 	}	
 	else 
 	{
-		log_posterior = -1.0e30; 
+		log_posterior = MINUS_INFINITY_LOCAL; 
 		return ERROR_OCCURRED; 
 	}
 }

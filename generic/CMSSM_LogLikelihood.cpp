@@ -3,7 +3,7 @@
 
 using namespace std; 
 
-int CMSSM::LogLikelihood(double &log_likelihood, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob)
+int CMSSM::LogLikelihood(double &log_likelihood,vector<TDenseVector> &z_tm1_last, vector<TDenseMatrix> &P_tm1_last, TDenseVector &p_tm1_last, const TDenseVector &x, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob) 
 // Returns
 // 	MODEL_NOT_PROPERLY_SET: if state_equation_function, measurement equation function or transition_prob_function not properly set
 // 	SUCCESS:	
@@ -11,7 +11,7 @@ int CMSSM::LogLikelihood(double &log_likelihood, const TDenseVector &x, const ve
 {
 	if (CheckModelFunctions() != SUCCESS)
 	{
-		log_likelihood = -1.0e30; 
+		log_likelihood = MINUS_INFINITY_LOCAL; 
 		return MODEL_NOT_PROPERLY_SET; 
 	}
 	if (UpdateStateModelParameters(0, y, x) == SUCCESS)
@@ -28,13 +28,20 @@ int CMSSM::LogLikelihood(double &log_likelihood, const TDenseVector &x, const ve
 		if (kalman_error == SUCCESS)
 		{
 			vector<TDenseVector> new_z_0 = z_tm1.back();
-			vector<TDenseMatrix> new_P_0 = P_tm1.back(); 
+			vector<TDenseMatrix> new_P_0 = P_tm1.back();
 
-			kalman_error = KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, y, new_z_0, new_P_0, initial_prob, x);
+			vector<TDenseVector> remaining_y(y.begin()+initial_period, y.end()); 
+
+			kalman_error = KalmanFilter(log_likelihood, z_tm1, P_tm1, p_tm1, remaining_y, new_z_0, new_P_0, initial_prob, x);
 			if (kalman_error == SUCCESS)
+			{
+				z_tm1_last = z_tm1.back(); 
+				P_tm1_last = P_tm1.back(); 
+				p_tm1_last = p_tm1.back(); 
 				return SUCCESS; 
+			}
 		}
 	}
-	log_likelihood = -1.0e30; 
+	log_likelihood = MINUS_INFINITY_LOCAL; 
 	return 	ERROR_OCCURRED; 
 }

@@ -11,7 +11,7 @@
 
 int MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
 {
-	const double INFINITE_BOUND = 1.0E20; 
+	const double INFINITE_BOUND = -CMSSM::MINUS_INFINITY_LOCAL;  
 	size_t nX = 14;
 	size_t nRegime = 2;  
 

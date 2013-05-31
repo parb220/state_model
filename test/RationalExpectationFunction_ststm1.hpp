@@ -11,8 +11,10 @@ const unsigned int RLOW_RE = 4;
 
 class RationalExpectationFunction_ststm1 : public RationalExpectationFunction
 {
+protected: 
+	virtual void ConvertXtoParameter(const TDenseVector &x) {}; 
 public:
-        virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &input_x);
+        virtual int convert(vector<vector<TDenseMatrix> > &A, vector<vector<TDenseMatrix> > &B, vector<vector<TDenseMatrix> > &Psi, vector<vector<TDenseMatrix> >&Pi, vector<vector<TDenseVector> > &C, const TDenseVector &input_x, size_t nZ, size_t nY, size_t nU, size_t nE, size_t nExpectation);
 	RationalExpectationFunction_ststm1() : RationalExpectationFunction() {}
 	RationalExpectationFunction_ststm1(const TDenseVector &p) : RationalExpectationFunction(p) {}
 	virtual ~RationalExpectationFunction_ststm1() {}	

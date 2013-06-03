@@ -4,6 +4,24 @@
 
 using namespace std; 
 
+/*
+ * Parameters of gsl_ran_gamma_pdf are not the same as the parameters of fn_logpdf_gamma
+ *      In gsl_ran_gamma_pdf, p(x) = 1/(Gamma(a) * b^a) x^{a-1} e^{-x/b}
+ *      In fn_logpdf_gamma, p(x) = b^a/Gamma(a) x^{a-1} e^{-bx}
+ *      That is, the two b parameters are reciprocal.
+ *
+ * Inverse gamma vs. Gamma distribution
+ *      In fn_logpdf_gamma, p1(x) = b^a/Gamma(a) x^{a-1} e^{-bx}
+ *      In fn_logpdf_invgam, p2(x) = b^a/Gamma(a) x^{-a-1} e^{-b/x}
+ *      p2(x) = p1(1/x) / x^2
+ *      That is, log(p2(x)) = log(p1(1/x))-2*log(x)
+ *
+ * Using gsl_ran_gamma_pdf to implement fn_logpdf_invgam
+ *      fn_logpdf_invgam(x, a, b) <=> log(gsl_ran_gamma_pdf(1.0/x, a, b))-2.0*log(x)
+ *
+ *
+ */
+
 double PriorDistrFunction_test_2nd::log_pdf(const TDenseVector &x2)
 {
 	double log_prior_pdf = 0.0; 
@@ -37,21 +55,21 @@ double PriorDistrFunction_test_2nd::log_pdf(const TDenseVector &x2)
 	if ( x2(count) < 0.0) 
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 3.878809415314558e-01, 1.628787676246154e-04) ); 
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 3.878809415314558e-01, 1.0/1.628787676246154e-04) )-2.0*log(x2(count)); 
 	// Inveal [0.0001 0.5], gsigmamu (s.d. of markup shock)
 	count ++; 
 	
 	if ( x2(count) <= 0.0)
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 3.878809415314558e-01, 1.628787676246154e-04) ); 
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 3.878809415314558e-01, 1.0/1.628787676246154e-04) )-2.0*log(x2(count)); 
 	// Inveal [0.0001 0.5], gsigmarn (s.d. of demand shock)
 	count ++; 
 	
 	if ( x2(count) <= 0.0)
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 4.5897, 21.4621) ); 
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x2(count), 4.5897, 1.0/21.4621) )-2.0*log(x2(count)); 
 	// Inveal [2.5, 12.5] for x(j_), NOT gsigmai; gsigmai = x(j_)/cl4gsigmai in ZLB (s.d. of policy shock)  
 	// Note: 1) 1 (or 2.5) basis point annually = 2.5000e-05 (or 6.2500e-05) quarterly.  
 	// 2) 2.5000e-04 quarterly = 10 basis points annually in the ZLB. 

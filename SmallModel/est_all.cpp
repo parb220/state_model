@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 		cout << "LogPosterior 1st regime: Error occurred \n"; 
 
 	// 2nd regime
-	TDenseVector initial_prob_2nd(model_2nd.nXi, 1.0); 
+	TDenseVector initial_prob_2nd(model_2nd.nXi, 0.0); 
 	initial_prob_2nd(10) = 1.0; 	// 10: the position for (3*, 3*) (staying in the ZLB regime)
 	vector<TDenseVector> z0_2nd(model_2nd.nXi); 
 	vector<TDenseMatrix> P0_2nd(model_2nd.nXi); 

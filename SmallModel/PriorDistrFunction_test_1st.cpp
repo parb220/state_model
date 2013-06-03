@@ -7,6 +7,15 @@
  * 	In gsl_ran_gamma_pdf, p(x) = 1/(Gamma(a) * b^a) x^{a-1} e^{-x/b}
  * 	In fn_logpdf_gamma, p(x) = b^a/Gamma(a) x^{a-1} e^{-bx}
  * 	That is, the two b parameters are reciprocal.
+ *
+ * Inverse gamma vs. Gamma distribution
+ * 	In fn_logpdf_gamma, p1(x) = b^a/Gamma(a) x^{a-1} e^{-bx}
+ * 	In fn_logpdf_invgam, p2(x) = b^a/Gamma(a) x^{-a-1} e^{-b/x}
+ * 	p2(x) = p1(1/x) / x^2
+ *	That is, inverse gamma, log(p2(x)) <=> gamma log(p1(1/x))-2*log(x)
+ *
+ * Using gsl_ran_gamma_pdf to implement fn_logpdf_invgam
+ * 	fn_logpdf_invgam(x, a, b) <=> log(gsl_ran_gamma_pdf(1.0/x, a, b))-2.0*log(x)
  */
 
 using namespace std; 
@@ -93,27 +102,24 @@ double PriorDistrFunction_test_1st::log_pdf(const TDenseVector &x1)
 		// Triangle prior on [0 1]; grhoi (persistence to monetary policy)
 	i_ ++; 
 
-	// Gamma distribution vs. Inverse gamma distribution
-	// 	X ~ Gamma(alpha, beta)
-	// 	Y=1/X ~ InverseGamma(alpha, 1/beta) 
 	if (x1(i_) <= 0.0 )
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.628787676246154e-04) ); 
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.0/1.628787676246154e-04) ) - 2.0*log(x1(i_) ); 
 		// Inveal [0.0001 0.5]; gsigmamu (s.d. of markup shock)
 	i_ ++; 
 	
 	if (x1(i_) <= 0.0 )
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.628787676246154e-04) ); 
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.0/1.628787676246154e-04) ) - 2.0*log(x1(i_) ); 
 		// Inveal [0.0001 0.5]; gsigmarn (s.d. of demand shock)
 	i_ ++; 
 
 	if (x1(i_) <= 0.0 )
 		return CMSSM::MINUS_INFINITY_LOCAL; 
 	else 
-		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.628787676246154e-04) );
+		log_prior_pdf += log(gsl_ran_gamma_pdf(1.0/x1(i_), 3.878809415314558e-01, 1.0/1.628787676246154e-04) ) - 2.0*log(x1(i_) );
 		// Inveal [0.0001 0.5]; gsigmai (s.d. of policy shock)
 	i_ ++; 
 

@@ -38,6 +38,10 @@ int RationalExpectationFunction_test::convert(vector<vector<TDenseMatrix> > &A_o
 
 	// Regime 2; 
 	//#include "Regime2/MathematicaInputGensysForm.cpp"
+	A.Zeros(nZ,nZ); 
+	B.Zeros(nZ,nZ); 
+	CapitalGammau.Zeros(nZ,nE); 
+	CapitalGammaeta.Zeros(nZ,nExpectation); 
 	#include "MathematicaInputGensysForm.Regime2"
 	A_output[1][0].CopyContent(A); 
 	A_output[1][1].CopyContent(A); 

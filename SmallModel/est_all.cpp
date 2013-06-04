@@ -84,7 +84,12 @@ int main(int argc, char **argv)
 	fixed_parameter(2) = 0.005/4;  	// cut-off: Annual rate of 50 baisis points for the interest rate.
 
 	// Initial parameters
-	TDenseVector x0 = InitializeParameter(nFree, fixed_parameter); 
+	vector<TDenseVector> initialX; 
+	TDenseVector x0; 
+	if (LoadInitialValue(initialX, initial_value_file_name) == SUCCESS)
+                x0 = initialX[0];
+	else 
+		x0 = InitializeParameter(nFree, fixed_parameter); 
 
 	/* Not implementing
  * 		Calibrated equilibrium

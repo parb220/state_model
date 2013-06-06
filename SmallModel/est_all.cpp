@@ -1,6 +1,8 @@
 #include <cstdio>
+#include <ctime>
 #include <getopt.h>
 #include <cstdlib>
+#include "dw_rand.h"
 #include "CMSSM.hpp"
 #include "CMSSM_Error_Code.hpp"
 #include "RationalExpectationFunction_test.hpp"
@@ -9,12 +11,12 @@
 #include "TransitionMatrixFunction_test.hpp" 
 #include "MakeLbUb_test.hpp"
 #include "ReadWriteFile.hpp"
-#include "est_all.hpp"
 #include "CMSSM_test_1st.hpp"
 #include "CMSSM_test_2nd.hpp"
 #include "PriorDistrFunction_test_1st.hpp"
 #include "PriorDistrFunction_test_2nd.hpp"
 #include "PriorDistrFunction_test_all.hpp"
+#include "InitializeParameter_test.hpp" 
 
 using namespace std; 
 
@@ -56,6 +58,9 @@ int main(int argc, char **argv)
 		cerr << "Usage: " << argv[0] << " -d data file -v initial value file -t maximum tries.\n"; 
 		abort(); 
 	}
+
+	// random number generator
+	dw_initialize_generator(time(NULL));
 
 	// Hubrid NK model (standard reduced form)
 	size_t nFree = 21+8+2;	// 21 (15+6): model parameters; 6=2X3 (Delta in Dan's sunspont notation) + 2=2x1 (gamma in Dan's sunspot notation): sunspot parameters (with 2 endogeneous errors and 3 fundamental shocks); 2 probabilites of staying in ZLB
@@ -161,62 +166,58 @@ int main(int argc, char **argv)
 		z0_1st[i].Zeros(model_1st.nZ); 
 		P0_1st[i]=Identity(model_1st.nZ)*100.0;
 	}
-	// Just for debugging
+	double log_likelihood_1st, log_likelihood_2nd, log_likelihood_all; 
+	double log_posterior_1st, log_posterior_2nd, log_posterior_all; 
+
+	vector<TDenseVector> z_tm1_last_1st, z_tm1_last_2nd, z_tm1_last_all; 
+       	vector<TDenseMatrix> P_tm1_last_1st, P_tm1_last_2nd, P_tm1_last_all; 
+       	TDenseVector p_tm1_last_1st, p_tm1_last_2nd, p_tm1_last_all; 
+	
+	TDenseVector initial_prob_2nd(model_2nd.nXi); 
+	initial_prob_2nd.Zeros(); 
+       	initial_prob_2nd(10) = 1.0;     // 10: the position for (3*, 3*) (staying in the ZLB regime)
+	vector<TDenseVector> z0_2nd(model_2nd.nXi); 
+	vector<TDenseMatrix> P0_2nd(model_2nd.nXi); 
+
+	/* Just for debugging
 	// Calling LogLikelihood to get z_tm1_last, P_tm1_last and p_tm1_last to be used by 2nd regime
-	double log_likelihood_1st; 
-	vector<TDenseVector> z_tm1_last_1st; 
-	vector<TDenseMatrix> P_tm1_last_1st; 
-	TDenseVector p_tm1_last_1st; 
 	if (model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) == SUCCESS)
 		cout << "LogLikelihood 1st regime: " << log_likelihood_1st << endl; 
 	else 
-		cout << "LogLikelihood 1st regime: Error occurred \n"; 
+		cerr << "LogLikelihood 1st regime: Error occurred \n"; 
 	double log_posterior_1st; 
 	if (model_1st.LogPosterior(log_posterior_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) == SUCCESS)
 		cout << "LogPosterior 1st regime: " << log_posterior_1st << endl; 
 	else 
-		cout << "LogPosterior 1st regime: Error occurred \n"; 
+		cerr << "LogPosterior 1st regime: Error occurred \n"; 
 
 	// 2nd regime
-	TDenseVector initial_prob_2nd(model_2nd.nXi, 0.0); 
-	initial_prob_2nd(10) = 1.0; 	// 10: the position for (3*, 3*) (staying in the ZLB regime)
-	vector<TDenseVector> z0_2nd(model_2nd.nXi); 
-	vector<TDenseMatrix> P0_2nd(model_2nd.nXi); 
 	for (unsigned int i=0; i<model_2nd.nXi; i++)
 	{
 		z0_2nd[i].CopyContent(z_tm1_last_1st[0]); 
 		P0_2nd[i].CopyContent(P_tm1_last_1st[0]); 
 	}
 	// Just for debugging
-	double log_posterior_2nd, log_likelihood_2nd; 
-	vector<TDenseVector> z_tm1_last_2nd; 
-	vector<TDenseMatrix> P_tm1_last_2nd; 
-	TDenseVector p_tm1_last_2nd; 
 	if (model_2nd.LogLikelihood(log_likelihood_2nd, z_tm1_last_2nd, P_tm1_last_2nd, p_tm1_last_2nd, x0, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) == SUCCESS) 
 		cout << "LogLikelihood 2nd regime: " << log_likelihood_2nd << endl; 
 	else 
-		cout << "LogLikelihood 2nd regime: Error occurred\n"; 
+		cerr << "LogLikelihood 2nd regime: Error occurred\n"; 
 	if (model_2nd.LogPosterior(log_posterior_2nd, x0, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) == SUCCESS)
 		cout << "LogPosterior 2nd regime: " << log_posterior_2nd << endl; 
 	else 
-		cout << "LogPosterior 2nd regime: Error occurred\n"; 
+		cerr << "LogPosterior 2nd regime: Error occurred\n"; 
 	// all together
-	double log_posterior_all, log_likelihood_all; 
-	vector<TDenseVector> z_tm1_last_all; 
-	vector<TDenseMatrix> P_tm1_last_all; 
-	TDenseVector p_tm1_last_all; 
 	if (model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x0, y, z0_1st, P0_1st, initial_prob_1st) == SUCCESS) 
 		cout << "LogLikelihood all : " << log_likelihood_all << endl; 
 	else 
-		cout << "LogLikelihood all : Error occurred\n"; 
+		cerr << "LogLikelihood all : Error occurred\n"; 
 	if (model_all.LogPosterior(log_posterior_all, x0, y, z0_1st, P0_1st, initial_prob_1st) == SUCCESS)
 		cout << "LogPosterior all: " << log_posterior_all << endl; 
 	else 
-		cout << "LogPosterior all: Error occurred\n"; 
+		cerr << "LogPosterior all: Error occurred\n"; 
+	*/
 
-
-/*
-
+	// Searching for optimal parameters
 	TDenseVector best_solution(nFree+2, 0.0);
 	best_solution(0) = best_solution(1) = CMSSM::MINUS_INFINITY_LOCAL; 
 	vector<TDenseVector> solutions(n_tries); 
@@ -224,110 +225,180 @@ int main(int argc, char **argv)
 	{
 		// solutions[i]: (MINUS_INFINITY, MINUS_INFINITY, x0)
 		solutions[i] = TDenseVector(nFree+2); 
-		solutions[i][0] = solutions[i][1] = CMSSM::MINUS_INFINITY; 
+		solutions[i][0] = solutions[i][1] = CMSSM::MINUS_INFINITY_LOCAL; 
 		for (int unsigned j=0; j<x0.dim; j++)
 			solutions[i][j+2] = x0[j]; 
 	} 
-	size_t max_count; 
-	vector<TDenseVector> initialX;
-	TDenseVector x0(nFree), x0Valid(nFree), lb, ub, function_value;  
 
-	if (LoadInitialValue(initialX, initial_value_file_name) == SUCCESS)
-		x0Valid = initialX[0]; 
-	else // Find valid starting value 
-	{ 
-		// Lower and upper bounds for x 
-		if ( MakeLbUb_ststm1(lb, ub, nFree) != SUCCESS ) 	
-		{
-			cerr << "------MakeLbUb(): error occurred ------\n";
-			abort(); 
-		}
-
-		// Find valid starting value for x 
-		max_count = 500; 
-		x0.RandomNormal(nFree); 			// Initial guess of x
-		if (model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) != SUCCESS)
-		{
-			cerr << "------ CMSSM::ValidInitialPoint(): no equilibrium exists ------.\n"; 
-			abort(); 
-		}
-	}
-	model.UpdateStateModelParameters(0,qdata,x0Valid);
-
-	 
-
-	// Maximize log-likelihood //
-
-	unsigned int i=0, number_bad=0; 
+	size_t number_bad = 0; 
+	TDenseVector x_input, initial_x1, initial_x2, initial_xall, lb, ub;  
+	TDenseVector xOptimal_1st, xOptimal_2nd, xOptimal_all; 
+	double lpOptimal_1st, lpOptimal_2nd, lpOptimal_all; 
+	unsigned int i=0; 
 	bool bad; 
-	double ll;	// log likelihood
-	TDenseVector xOptimal(nFree); 
-
-	bool if_search_initial;  
-	if (initialX.empty())
-	{
-		initialX.resize(n_tries); 
-		for (unsigned int i=0; i<n_tries; i++)
-			initialX[i].RandomNormal(nFree);
-		solutions.resize(n_tries);
-		if_search_initial = true;  
-	}
-	else 
-	{
-		solutions.resize(initialX.size()); 
-		if_search_initial = false; 
-	}
 	
-	for (unsigned int i=0; i<solutions.size(); i++)
-		solutions[i] = TDenseVector(nFree+1,0.0); 
-
-	while (i < initialX.size() && number_bad < 200)
+	x_input = x0; 
+	while (i < n_tries  && number_bad < 200)
 	{
-		solutions[i].SetElement(MINUS_INFINITY, 0); 
-		bad = true; 
+		solutions[i].SetElement(CMSSM::MINUS_INFINITY_LOCAL, 0); 
+		bad = false; 
+	
+		//////////////////////////////////////////////////////
+		// First block: 1st regime parameters only 
+		/////////////////////////////////////////////////////
 		
-		// Find valid starting value 
-		x0 = initialX[i]; 
-		if ( (x0[x0.dim-1] <=0.0) || (x0[x0.dim-1] > 1.0) )
-			x0.SetElement(0.5,x0.dim-1);
-		if ( (x0[x0.dim-2] <=0.0) || (x0[x0.dim-2] > 1.0) )
-			x0.SetElement(0.5,x0.dim-2); 
-
-		max_count = 10; 
-		if (if_search_initial) 
+		// initialize
+		if (!bad)
 		{
-			if ( MakeLbUb_ststm1(lb, ub, nFree) == SUCCESS && model.ValidInitialPoint(function_value, x0Valid, x0, max_count, lb, ub) == SUCCESS && model.Maximize_LogLikelihood_NPSOL(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET ) 
-				bad = false; 
-			else 
-				bad = true; 
-		}
-		else 
-		{
-			x0Valid = x0; 
-			if (model.Maximize_LogLikelihood_NPSOL(ll,xOptimal,qdata,z0,P0,initial_prob,x0Valid) != MODEL_NOT_PROPERLY_SET )
-				bad = false; 
-			else 
-				bad = true; 
-				
-		}
-		if (bad )
-			number_bad ++; 	
-		else 
-		{
-			solutions[i].SetElement(ll, 0); 
-			for (unsigned int j=1; j<solutions[i].dim; j++)
-				solutions[i].SetElement(xOptimal[j-1], j); 
-			if (ll > best_solution[0])
+			initial_x1 = x_input;
+			// only elements at locs_x1 are changed by RandomInit_test_1st, 
+			// while all the other elements are as x_input.
+			if (!bad && i>0 && RandomInit_test_1st(initial_x1, locs_x1) != SUCCESS)
 			{
-				for (unsigned int j=0; j<solutions[i].dim; j++)
-					best_solution.SetElement(solutions[i][j],j); 
-			}
-			i ++; 
-			bad = false; 
+				cerr << "Randomly initialize parameters of the 1st regime: Error occurred.\n";
+				bad = true; 
+			}	
+		} 
+		// bound 
+		if(!bad && MakeLbUb_test(lb,ub,initial_x1.dim) != SUCCESS )
+		{
+			cerr << "MakeLbUb_test: Error occurred.\n"; 
+			bad = true; 
 		}
-	}
+        	// log-posterior for initial_x1
+		if (!bad && model_1st.LogPosterior(log_posterior_1st, initial_x1, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+		{
+                	cerr << "LogPosterior 1st regime: Error occurred \n";
+			bad = true; 
+		}
+		// optimizing 
+		if (!bad && log_posterior_1st > CMSSM::MINUS_INFINITY_LOCAL)
+			if  (model_1st.Maximize_LogPosterior_NPSOL(lpOptimal_1st,xOptimal_1st,y1st,z0_1st,P0_1st,initial_prob_1st,initial_x1) == MODEL_NOT_PROPERLY_SET)
+			{
+				cerr << " No eqilibrium for the 1st regime.\n";
+				bad = true; 
+			}
+		// Update x_input(locs_x1) 
+		if (!bad)
+		{
+			for (unsigned int j=0; j<locs_x1.size(); j++)
+				x_input(locs_x1[j]) = xOptimal_1st(locs_x1[j]); 
+		}
+
+		//////////////////////////////////////////////////////
+		// Second block: 2nd regime parameters only
+		//////////////////////////////////////////////////////
+
+		// obtain z_tm1_last_1st and P_tm1_last_1st to intialize z_02nd and P0_2nd
+        	if (!bad && model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+		{
+                	cerr << "LogLikelihood 1st regime: Error occurred"  << endl; 
+			bad = true; 
+		}
+
+		// initiaize
+		if (!bad)
+		{	
+        		for (unsigned int j=0; j<model_2nd.nXi; j++)
+        		{
+               			z0_2nd[j].CopyContent(z_tm1_last_1st[0]); 
+               			P0_2nd[j].CopyContent(P_tm1_last_1st[0]); 
+        		}
+			initial_x2 = x_input; 
+			// Only initial_x2(locs_x2) are changed by RandomInit_test_2nd
+			if (i>0 && RandomInit_test_2nd(initial_x2, locs_x2) != SUCCESS)
+			{
+				cerr << "Randomly initialize parameters for the 2nd regime: error occurred.\n"; 
+				bad = true; 
+			}
+		}
+		// bounds
+		if( !bad && MakeLbUb_test(lb,ub,initial_x2.dim) != SUCCESS )
+		{
+                        cerr << "MakeLbUb_test: Error occurred.\n";
+			bad = true; 
+		}
+		// log-posterior for initial_x2
+		if (!bad && model_2nd.LogPosterior(log_posterior_2nd, initial_x2, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) != SUCCESS)
+		{
+                        cerr << "LogPosterior 2nd regime: Error occurred \n";
+			bad = true;  
+		}
+		// optimizing
+		if (!bad && log_posterior_2nd > CMSSM::MINUS_INFINITY_LOCAL)
+			if (model_2nd.Maximize_LogPosterior_NPSOL(lpOptimal_2nd,xOptimal_2nd,y2nd,z0_2nd,P0_2nd,initial_prob_2nd,initial_x2) == MODEL_NOT_PROPERLY_SET)
+			{
+				cout << "No equilibrium for the 2nd regime.\n"; 
+				bad = true; 
+			}
+		
+		// Update x_input(locs_x2)
+		if (!bad)
+		{
+			for (unsigned int j=0; j<locs_x2.size(); j++)
+				x_input(locs_x2[j]) = xOptimal_2nd(locs_x2[j]); 			
+		}
+	
+		////////////////////////////////////////////////////////////
+		// Overall: all parameters
+		///////////////////////////////////////////////////////////
+		
+		// initialize and bound
+		if (!bad)
+		{
+			initial_xall = x_input; 
+			if( !bad && MakeLbUb_test(lb,ub,initial_xall.dim) != SUCCESS )
+			{
+                        	cerr << "MakeLbUb_test: Error occurred.\n";	
+				bad = true; 
+			}
+		}
+		// log-posterior for initial_xall
+		if (!bad && model_all.LogPosterior(log_posterior_all, initial_xall, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+		{
+                        cerr << "LogPosterior all: Error occurred \n";
+			bad = true; 
+		}
+		// optimize
+		if (!bad && log_posterior_all > CMSSM::MINUS_INFINITY_LOCAL)
+			if (model_all.Maximize_LogPosterior_NPSOL(lpOptimal_all,xOptimal_all,y,z0_1st,P0_1st,initial_prob_1st,initial_xall) == MODEL_NOT_PROPERLY_SET)
+			{
+				cerr << "No equilibrium for the overall regime.\n"; 
+				bad = true; 
+			}
+	
+		if (!bad)
+		{
+			// update x_input(locs_xall)
+			for (unsigned int j=0; j<locs_xall.size(); j++)
+				x_input(locs_xall[j]) = xOptimal_all(locs_xall[j]); 
+			
+			// log-likelihood for final solution x_input
+			if (!bad && model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+			{
+				cerr << "LogLikelihood all: Error occurred\n"; 
+				bad = true; 
+			}
+			// log_posterior for final solution x_input
+			if (!bad && model_all.LogPosterior(log_posterior_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+			{
+				cerr << "LogPosterior all: Error occurred\n"; 
+				bad = true; 
+			}
+			solutions[i](0)=log_posterior_all; 
+			solutions[i](1)=log_likelihood_all; 
+			for (unsigned int j=0; j<x_input.dim; j++)
+				solutions[i][j+2] = x_input[j]; 
+			if (log_posterior_all > best_solution[0])
+				best_solution = solutions[i]; 
+		}
+
+		i++; 
+		if (bad)
+			number_bad ++; 
+	}		
+
 	for (unsigned int i=0; i<best_solution.dim; i++)
 		printf("%.20g ", best_solution[i]); 
-	printf("\n"); 
-*/
+	printf("\n");
 }

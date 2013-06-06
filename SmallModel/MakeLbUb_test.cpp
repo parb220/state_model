@@ -1,3 +1,4 @@
+#include "CMSSM.hpp"
 #include "CMSSM_Error_Code.hpp"
 #include "MakeLbUb_test.hpp"
 
@@ -9,9 +10,9 @@
 // 	ERROR_OCCURRED if failed (number of bounds set is not equal to the number of parameters)
 //
 
-int MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
+int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
 {
-	const double INFINITY = 1.0E30; 
+	const double INFINITY = -CMSSM::MINUS_INFINITY_LOCAL; 
 	size_t n_x = 15; 
 	unsigned int i_ = 0; 
 	unsigned int j_ = n_x; 
@@ -36,16 +37,16 @@ int MakeLbUb_ststm1(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
 		lb(i_) = 0.0;   lb(j_) = 0.0;   ub(i_) = 1.0;   ub(j_) = 25.0;  i_=i_+1;	j_=j_+1;   	// x(j_), NOT gsigmai (s.d. of policy shock).  gsigmai = x(j_)/scl4gsigmai for 2nd regime while ub(j_) deals with x(j_), NOT gsigmai. 25.0 corresponds to 10 basis points annually.
 		lb(i_) = -5.0;	ub(i_) = 5.0;			// giota (level adjustment for ZLB drop in the interest rate)
 	
-		lb(22) = -INFINITY;	ub(22) = INFINITY;	// Sunspot component
-   		lb(23) = -INFINITY; 	ub(23) = INFINITY;      // Sunspot component
-   		lb(24) = -INFINITY; 	ub(24) = INFINITY;     	// Sunspot component
+		lb(21) = -INFINITY;	ub(21) = INFINITY;	// Sunspot component
+   		lb(22) = -INFINITY; 	ub(22) = INFINITY;      // Sunspot component
+   		lb(23) = -INFINITY; 	ub(23) = INFINITY;     	// Sunspot component
+   		lb(24) = -INFINITY; 	ub(24) = INFINITY; 	// Sunspot component
    		lb(25) = -INFINITY; 	ub(25) = INFINITY; 	// Sunspot component
    		lb(26) = -INFINITY; 	ub(26) = INFINITY; 	// Sunspot component
-   		lb(27) = -INFINITY; 	ub(27) = INFINITY; 	// Sunspot component
+   		lb(27) = -INFINITY; 	ub(27) = INFINITY;	// Sunspot component
    		lb(28) = -INFINITY; 	ub(28) = INFINITY;	// Sunspot component
-   		lb(29) = -INFINITY; 	ub(29) = INFINITY;	// Sunspot component
-		lb(30) = 0.0; 	ub(30) = 1.0;			// probability of staying in regime 1   
-   		lb(31) =  0.0;	ub(31) = 1.0;			// probability of staying in regime 2
+		lb(29) = 0.0; 	ub(29) = 1.0;			// probability of staying in regime 1   
+   		lb(30) =  0.0;	ub(30) = 1.0;			// probability of staying in regime 2
 	} 
 	return SUCCESS; 
 }

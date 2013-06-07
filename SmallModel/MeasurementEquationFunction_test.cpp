@@ -17,8 +17,8 @@ int MeasurementEquationFunction_test::convert(vector<TDenseVector> &a, vector<TD
 	TDenseVector ameasure(nY, 0.0); 
 	TDenseMatrix Hmeasure(nY, nZ, 0.0); 
 
-	// #include "Regime1/MathematicaInputMeasureMatrices.cpp"
-	#include "MathematicaInputMeasureMatrices.Regime1"
+	#include "Regime1/MathematicaInputMeasureMatrices.cpp"
+	// #include "MathematicaInputMeasureMatrices.Regime1"
 	// Because measurement equations are the same for all the regimes
 	// we only use Regime1's to assign a, H, Phi_u and R for all the regimes
 	for (unsigned int i=0; i<nNu; i++)

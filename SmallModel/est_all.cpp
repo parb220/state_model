@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <cstdio>
 #include <ctime>
 #include <getopt.h>
@@ -28,15 +31,16 @@ int main(int argc, char **argv)
 		{"initial_value_file", required_argument, 0, 'v'}, 
 		{"max_tries", required_argument, 0, 't'},
 		{"minus_infinity", required_argument, 0, 'i'},
+		{"output_file", required_argument, 0, 'f'},
 		{0, 0, 0, 0}
 	}; 
 	int option_index = 0; 
-	string data_file_name, initial_value_file_name; 
+	string data_file_name, initial_value_file_name, output_file_name; 
 	size_t n_tries = 10; 
 	double minus_infinity = -1.0e30; 
 	while (1)
 	{
-		int c = getopt_long(argc, argv, "d:v:t:", long_options, &option_index); 
+		int c = getopt_long(argc, argv, "d:v:t:i:f:", long_options, &option_index); 
 		if (c == -1)
 			break; 
 		switch(c)
@@ -49,6 +53,8 @@ int main(int argc, char **argv)
 				n_tries = atoi(optarg); break; 
 			case 'i':
 				minus_infinity = atof(optarg); break; 
+			case 'f': 
+				output_file_name = string(optarg); break; 
 			default:
 				break; 
 		}
@@ -85,7 +91,7 @@ int main(int argc, char **argv)
 	// fixed_parameters for (RationalExpectationFunction, StateEquationFunction, MeasurementEquationFunction) and TransitionProbMatrix
 	TDenseVector fixed_parameter(3);
 	fixed_parameter(0) = 1.0e+05; 	// scl4gsigmai2: Scale for s.d. of interest rate in ZLB. Scale for s.d. of interest rate in ZLB. 1) 1 (or 2.5) basis point annually = 2.5000e-05 (or 6.2500e-05) quarterly.  2) 2.5000e-04 quarterly = 10 basis points annually in the ZLB.
-	fixed_parameter(1) = 0.00025;   	// ilow: Net rate: 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e-04*4 = 0.0015 annually.
+	fixed_parameter(1) = 0.000375;   	// ilow: Net rate: 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e-04*4 = 0.0015 annually.
 	fixed_parameter(2) = 0.005/4;  	// cut-off: Annual rate of 50 baisis points for the interest rate.
 
 	// Initial parameters
@@ -112,15 +118,15 @@ int main(int argc, char **argv)
 	/* Read in data: end */
 	size_t nSample = qdata.size(); 	// total sample size
 	size_t nY = qdata[0].dim;	// number of observables
+	vector<TDenseVector> y = qdata; 
 	/* Switch order of qdata, so that the new order is [1 0 2]
   	coressponding to inflation, output and interest rate, respectively.
-  	*/
 	vector<TDenseVector> y = vector<TDenseVector>(nSample); 
 	vector<int>new_order(nY); 
 	new_order[0] = 1; new_order[1] = 0; new_order[2] = 2; 
 	for (unsigned int i=0; i<nSample; i++)
 		y[i] = qdata[i].SwitchOrder(new_order); 
-	/* Switch order of qdata: end */
+	Switch order of qdata: end */
 	
 	// First regime (normal, above 50 basis points at annual rate)
 	int yrStart = 1985, qmStart = 1, yrEnd = 2008, qmEnd = 3; 
@@ -365,6 +371,7 @@ int main(int argc, char **argv)
 			{
 				cerr << "No equilibrium for the overall regime.\n"; 
 				bad = true; 
+				number_bad ++; 
 			}
 	
 		if (!bad)
@@ -392,13 +399,43 @@ int main(int argc, char **argv)
 			if (log_posterior_all > best_solution[0])
 				best_solution = solutions[i]; 
 		}
-
 		i++; 
-		if (bad)
-			number_bad ++; 
 	}		
 
-	for (unsigned int i=0; i<best_solution.dim; i++)
-		printf("%.20g ", best_solution[i]); 
+	// Output results
+	ofstream output_file; 
+	if (output_file_name.length() > 0)
+		output_file.open(output_file_name.c_str()); 
+	if (output_file_name.length() > 0 && output_file)
+	{
+		output_file << "================== best solution =====================\n";
+                for (unsigned int i=0; i<best_solution.dim; i++)
+                	output_file << setprecision(20) << best_solution[i] << " ";
+                output_file << endl;
+        
+               	 for (unsigned int i=0; i<n_tries; i++)
+                {
+                        output_file << "\n ================ solution: " << i << "=====================\n";
+                        for (unsigned int j=0; j<solutions[i].dim; j++)
+                                output_file << setprecision(20) << solutions[i][j] << " ";
+                        output_file << endl;
+                }
+		output_file.close(); 
+	}
+	else 
+	{
+		cout << "================== best solution =====================\n"; 
+		for (unsigned int i=0; i<best_solution.dim; i++)
+			cout << setprecision(20) << best_solution[i] << " "; 
+		cout << endl; 
+
+		for (unsigned int i=0; i<n_tries; i++)
+		{
+			cout << "\n ================ solution: " << i << "=====================\n"; 
+			for (unsigned int j=0; j<solutions[i].dim; j++)
+				cout << setprecision(20) << solutions[i][j] << " "; 
+			cout << endl; 
+		}
+	}
 	printf("\n");
 }

@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 	{
 		z0_2nd[i].CopyContent(z_tm1_last_1st[0]); 
 		P0_2nd[i].CopyContent(P_tm1_last_1st[0]); 
-	}
+	} 
 	// Just for debugging
 	if (model_2nd.LogLikelihood(log_likelihood_2nd, z_tm1_last_2nd, P_tm1_last_2nd, p_tm1_last_2nd, x0, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) == SUCCESS) 
 		cout << "LogLikelihood 2nd regime: " << log_likelihood_2nd << endl; 
@@ -211,7 +211,8 @@ int main(int argc, char **argv)
 	if (model_2nd.LogPosterior(log_posterior_2nd, x0, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) == SUCCESS)
 		cout << "LogPosterior 2nd regime: " << log_posterior_2nd << endl; 
 	else 
-		cerr << "LogPosterior 2nd regime: Error occurred\n"; 
+		cerr << "LogPosterior 2nd regime: Error occurred\n";  */
+
 	// all together
 	if (model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x0, y, z0_1st, P0_1st, initial_prob_1st) == SUCCESS) 
 		cout << "LogLikelihood all : " << log_likelihood_all << endl; 
@@ -221,7 +222,6 @@ int main(int argc, char **argv)
 		cout << "LogPosterior all: " << log_posterior_all << endl; 
 	else 
 		cerr << "LogPosterior all: Error occurred\n"; 
-	*/
 
 	// Searching for optimal parameters
 	TDenseVector best_solution(nFree+2, 0.0);
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 		//////////////////////////////////////////////////////
 		// First block: 1st regime parameters only 
 		/////////////////////////////////////////////////////
-		
+	
 		// initialize
 		if (!bad)
 		{
@@ -408,14 +408,14 @@ int main(int argc, char **argv)
 		output_file.open(output_file_name.c_str()); 
 	if (output_file_name.length() > 0 && output_file)
 	{
-		output_file << "================== best solution =====================\n";
+		/*output_file << "================== best solution =====================\n";
                 for (unsigned int i=0; i<best_solution.dim; i++)
                 	output_file << setprecision(20) << best_solution[i] << " ";
-                output_file << endl;
+                output_file << endl;*/
         
                	 for (unsigned int i=0; i<n_tries; i++)
                 {
-                        output_file << "\n ================ solution: " << i << "=====================\n";
+                        // output_file << "\n ================ solution: " << i << "=====================\n";
                         for (unsigned int j=0; j<solutions[i].dim; j++)
                                 output_file << setprecision(20) << solutions[i][j] << " ";
                         output_file << endl;
@@ -424,18 +424,17 @@ int main(int argc, char **argv)
 	}
 	else 
 	{
-		cout << "================== best solution =====================\n"; 
+		/*cout << "================== best solution =====================\n"; 
 		for (unsigned int i=0; i<best_solution.dim; i++)
 			cout << setprecision(20) << best_solution[i] << " "; 
-		cout << endl; 
+		cout << endl; */
 
 		for (unsigned int i=0; i<n_tries; i++)
 		{
-			cout << "\n ================ solution: " << i << "=====================\n"; 
+			// cout << "\n ================ solution: " << i << "=====================\n"; 
 			for (unsigned int j=0; j<solutions[i].dim; j++)
 				cout << setprecision(20) << solutions[i][j] << " "; 
 			cout << endl; 
 		}
 	}
-	printf("\n");
 }

@@ -68,7 +68,7 @@ double MinusLogPosterior_CSMINWEL::function(double *x_array, int n, double **arg
 		return minus_log_posterior; 
 }
 
-int CMSSM::Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0) 
+int CMSSM::Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0, const TDenseVector &ub, const TDenseVector &lb) 
 // Returns
 // 	MODEL_NOT_PROPERLY_SET:	if state_equation_function, measurement_equation_function or transition_prob_function not properly set
 // 	>=0:	inform code returned by npsol_
@@ -124,12 +124,19 @@ int CMSSM::Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVect
 	double *g = new double[n]; 			// gradident 
 	
 	//=====================================================
-	memcpy(x_raw, x0.vector, n*sizeof(double) ); 
-	for (unsigned int i=0; i<n; i++)
-	{
-		bl[i] = -INFINITE_BOUND; 
-		bu[i] = INFINITE_BOUND; 
-	}
+	memcpy(x_raw, x0.vector, x0.dim*sizeof(double) ); 
+	if (ub.dim != x0.dim)
+		for (unsigned int i=0; i<x0.dim; i++)
+			bu[i] = INFINITE_BOUND; 
+	else 
+		for (unsigned int i=0; i<x0.dim; i++)
+			bu[i] = ub[i]; 
+	if (lb.dim != x0.dim)
+		for (unsigned int i=0; i<x0.dim; i++)
+			bl[i] = -INFINITE_BOUND; 
+	else 
+		for (unsigned int i=0; i<x0.dim; i++)
+			bl[i] = lb[i]; 
 
 	npoptn_((char*)DERIVATIVE_LEVEL.c_str(), DERIVATIVE_LEVEL.length()); 
 	npoptn_((char*)COLD_START.c_str(), COLD_START.length());

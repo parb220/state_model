@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	}; 
 	int option_index = 0; 
 	string data_file_name, initial_value_file_name, output_file_name; 
-	size_t n_tries = 10; 
+	size_t n_tries = 30; 
 	double minus_infinity = -1.0e30; 
 	while (1)
 	{
@@ -59,9 +59,9 @@ int main(int argc, char **argv)
 				break; 
 		}
 	}
-	if (data_file_name.length() ==0) 
+	if (data_file_name.length() ==0 || output_file_name.length() == 0) 
 	{
-		cerr << "Usage: " << argv[0] << " -d data file -v initial value file -t maximum tries.\n"; 
+		cerr << "Usage: " << argv[0] << " -d data file -v initial value file -t maximum tries -i minus infinity -f output file.\n"; 
 		abort(); 
 	}
 
@@ -94,13 +94,14 @@ int main(int argc, char **argv)
 	fixed_parameter(1) = 0.000375;   	// ilow: Net rate: 10 basis points (0.1%) interest rate annually at zero bound or 0.025% quarterly at zero bound. In 2012Q2, it is 3.83e-04*4 = 0.0015 annually.
 	fixed_parameter(2) = 0.005/4;  	// cut-off: Annual rate of 50 baisis points for the interest rate.
 
-	// Initial parameters
+	// Get all initial parameters either from file, or from a random seed
 	vector<TDenseVector> initialX; 
 	TDenseVector x0; 
-	if (LoadInitialValue(initialX, initial_value_file_name) == SUCCESS)
-                x0 = initialX[0];
-	else 
+	if (LoadInitialValue(initialX, initial_value_file_name) != SUCCESS)
+	{
 		x0 = InitializeParameter(nFree, fixed_parameter); 
+		initialX.push_back(x0); 
+	}
 
 	/* Not implementing
  * 		Calibrated equilibrium
@@ -211,7 +212,7 @@ int main(int argc, char **argv)
 	if (model_2nd.LogPosterior(log_posterior_2nd, x0, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) == SUCCESS)
 		cout << "LogPosterior 2nd regime: " << log_posterior_2nd << endl; 
 	else 
-		cerr << "LogPosterior 2nd regime: Error occurred\n";  */
+		cerr << "LogPosterior 2nd regime: Error occurred\n"; 
 
 	// all together
 	if (model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x0, y, z0_1st, P0_1st, initial_prob_1st) == SUCCESS) 
@@ -221,19 +222,17 @@ int main(int argc, char **argv)
 	if (model_all.LogPosterior(log_posterior_all, x0, y, z0_1st, P0_1st, initial_prob_1st) == SUCCESS)
 		cout << "LogPosterior all: " << log_posterior_all << endl; 
 	else 
-		cerr << "LogPosterior all: Error occurred\n"; 
+		cerr << "LogPosterior all: Error occurred\n"; */
 
 	// Searching for optimal parameters
 	TDenseVector best_solution(nFree+2, 0.0);
 	best_solution(0) = best_solution(1) = CMSSM::MINUS_INFINITY_LOCAL; 
-	vector<TDenseVector> solutions(n_tries); 
+	vector<TDenseVector> solutions(initialX.size()*n_tries*2);	// csminwell (odd-number indexed) + npsol (even-number indexed)
 	for (unsigned int i=0; i<solutions.size(); i++)
 	{
 		// solutions[i]: (MINUS_INFINITY, MINUS_INFINITY, x0)
-		solutions[i] = TDenseVector(nFree+2); 
+		solutions[i] = TDenseVector(nFree+2,0.0); 
 		solutions[i][0] = solutions[i][1] = CMSSM::MINUS_INFINITY_LOCAL; 
-		for (int unsigned j=0; j<x0.dim; j++)
-			solutions[i][j+2] = x0[j]; 
 	} 
 
 	size_t number_bad = 0; 
@@ -243,177 +242,244 @@ int main(int argc, char **argv)
 	unsigned int i=0; 
 	bool bad; 
 	
-	x_input = x0; 
-	while (i < n_tries  && number_bad < 200)
+	for (unsigned int initial_index=0; initial_index < initialX.size(); initial_index++)
 	{
-		solutions[i].SetElement(CMSSM::MINUS_INFINITY_LOCAL, 0); 
-		bad = false; 
-	
-		//////////////////////////////////////////////////////
-		// First block: 1st regime parameters only 
-		/////////////////////////////////////////////////////
-	
-		// initialize
-		if (!bad)
+		x0 = initialX[initial_index]; 
+		x_input = x0; 
+		number_bad = 0; 
+		i = 0; 
+		while (i < 2*n_tries  && number_bad < 200)
 		{
-			initial_x1 = x_input;
-			// only elements at locs_x1 are changed by RandomInit_test_1st, 
-			// while all the other elements are as x_input.
-			if (!bad && i>0 && RandomInit_test_1st(initial_x1, locs_x1) != SUCCESS)
+			bad = false; 
+	
+			//////////////////////////////////////////////////////
+			// First block: 1st regime parameters only 
+			/////////////////////////////////////////////////////
+	
+			// initialize
+			if (!bad)
 			{
-				cerr << "Randomly initialize parameters of the 1st regime: Error occurred.\n";
+				initial_x1 = x_input;
+				// only elements at locs_x1 are changed by RandomInit_test_1st, 
+				// while all the other elements are as x_input.
+				if (!bad && i>0 && RandomInit_test_1st(initial_x1, locs_x1) != SUCCESS)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "Randomly initialize parameters of the 1st regime: Error occurred.\n";
+					#endif
+					bad = true; 
+				}	
+			} 
+			// bound 
+			if(!bad && MakeLbUb_test(lb,ub,initial_x1.dim) != SUCCESS )
+			{
+				#ifdef DEBUG_MESSAGE
+				cerr << "MakeLbUb_test: Error occurred.\n"; 
+				#endif
 				bad = true; 
+			}
+        		// log-posterior for initial_x1
+			if (!bad && model_1st.LogPosterior(log_posterior_1st, initial_x1, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+			{
+				#ifdef DEBUG_MESSAGE
+                		cerr << "LogPosterior 1st regime: Error occurred \n";
+				#endif
+				bad = true; 
+			}
+			// optimizing 
+			if (!bad && log_posterior_1st <= CMSSM::MINUS_INFINITY_LOCAL)
+				bad = true; 
+			if (!bad )
+			{
+				if  ((i%2 == 0) && model_1st.Maximize_LogPosterior_NPSOL(lpOptimal_1st,xOptimal_1st,y1st,z0_1st,P0_1st,initial_prob_1st,initial_x1, ub,lb) == MODEL_NOT_PROPERLY_SET)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << " No eqilibrium for the 1st regime.\n";
+					#endif
+					bad = true; 
+				}
+				if ((i%2 == 1) && model_1st.Maximize_LogPosterior_CSMINWEL(lpOptimal_1st,xOptimal_1st,y1st,z0_1st,P0_1st,initial_prob_1st,initial_x1) == MODEL_NOT_PROPERLY_SET)
+                        	{
+					#ifdef DEBUG_MESSAGE
+                                	cerr << " No eqilibrium for the 1st regime.\n";
+					#endif
+                                	bad = true;
+                        	}
 			}	
-		} 
-		// bound 
-		if(!bad && MakeLbUb_test(lb,ub,initial_x1.dim) != SUCCESS )
-		{
-			cerr << "MakeLbUb_test: Error occurred.\n"; 
-			bad = true; 
-		}
-        	// log-posterior for initial_x1
-		if (!bad && model_1st.LogPosterior(log_posterior_1st, initial_x1, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
-		{
-                	cerr << "LogPosterior 1st regime: Error occurred \n";
-			bad = true; 
-		}
-		// optimizing 
-		if (!bad && log_posterior_1st > CMSSM::MINUS_INFINITY_LOCAL)
-			if  (model_1st.Maximize_LogPosterior_NPSOL(lpOptimal_1st,xOptimal_1st,y1st,z0_1st,P0_1st,initial_prob_1st,initial_x1) == MODEL_NOT_PROPERLY_SET)
+			// Update x_input(locs_x1) 
+			if (!bad)
 			{
-				cerr << " No eqilibrium for the 1st regime.\n";
-				bad = true; 
+				for (unsigned int j=0; j<locs_x1.size(); j++)
+					x_input(locs_x1[j]) = xOptimal_1st(locs_x1[j]); 
 			}
-		// Update x_input(locs_x1) 
-		if (!bad)
-		{
-			for (unsigned int j=0; j<locs_x1.size(); j++)
-				x_input(locs_x1[j]) = xOptimal_1st(locs_x1[j]); 
-		}
 
-		//////////////////////////////////////////////////////
-		// Second block: 2nd regime parameters only
-		//////////////////////////////////////////////////////
+			//////////////////////////////////////////////////////
+			// Second block: 2nd regime parameters only
+			//////////////////////////////////////////////////////
 
-		// obtain z_tm1_last_1st and P_tm1_last_1st to intialize z_02nd and P0_2nd
-        	if (!bad && model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
-		{
-                	cerr << "LogLikelihood 1st regime: Error occurred"  << endl; 
-			bad = true; 
-		}
+			// obtain z_tm1_last_1st and P_tm1_last_1st to intialize z_02nd and P0_2nd
+        		if (!bad && model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+			{
+				#ifdef DEBUG_MESSAGE
+                		cerr << "LogLikelihood 1st regime: Error occurred"  << endl; 
+				#endif
+				bad = true; 
+			}
 
-		// initiaize
-		if (!bad)
-		{	
-        		for (unsigned int j=0; j<model_2nd.nXi; j++)
-        		{
-               			z0_2nd[j].CopyContent(z_tm1_last_1st[0]); 
-               			P0_2nd[j].CopyContent(P_tm1_last_1st[0]); 
-        		}
-			initial_x2 = x_input; 
-			// Only initial_x2(locs_x2) are changed by RandomInit_test_2nd
-			if (i>0 && RandomInit_test_2nd(initial_x2, locs_x2) != SUCCESS)
+			// initiaize
+			if (!bad)
+			{	
+        			for (unsigned int j=0; j<model_2nd.nXi; j++)
+        			{
+               				z0_2nd[j].CopyContent(z_tm1_last_1st[0]); 
+               				P0_2nd[j].CopyContent(P_tm1_last_1st[0]); 
+        			}
+				initial_x2 = x_input; 
+				// Only initial_x2(locs_x2) are changed by RandomInit_test_2nd
+				if (i>0 && RandomInit_test_2nd(initial_x2, locs_x2) != SUCCESS)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "Randomly initialize parameters for the 2nd regime: error occurred.\n"; 
+					#endif
+					bad = true; 
+				}
+			}
+			// bounds
+			if( !bad && MakeLbUb_test(lb,ub,initial_x2.dim) != SUCCESS )
 			{
-				cerr << "Randomly initialize parameters for the 2nd regime: error occurred.\n"; 
+				#ifdef DEBUG_MESSAGE
+                        	cerr << "MakeLbUb_test: Error occurred.\n";
+				#endif
 				bad = true; 
 			}
-		}
-		// bounds
-		if( !bad && MakeLbUb_test(lb,ub,initial_x2.dim) != SUCCESS )
-		{
-                        cerr << "MakeLbUb_test: Error occurred.\n";
-			bad = true; 
-		}
-		// log-posterior for initial_x2
-		if (!bad && model_2nd.LogPosterior(log_posterior_2nd, initial_x2, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) != SUCCESS)
-		{
-                        cerr << "LogPosterior 2nd regime: Error occurred \n";
-			bad = true;  
-		}
-		// optimizing
-		if (!bad && log_posterior_2nd > CMSSM::MINUS_INFINITY_LOCAL)
-			if (model_2nd.Maximize_LogPosterior_NPSOL(lpOptimal_2nd,xOptimal_2nd,y2nd,z0_2nd,P0_2nd,initial_prob_2nd,initial_x2) == MODEL_NOT_PROPERLY_SET)
+			// log-posterior for initial_x2
+			if (!bad && model_2nd.LogPosterior(log_posterior_2nd, initial_x2, y2nd, z0_2nd, P0_2nd, initial_prob_2nd) != SUCCESS)
 			{
-				cout << "No equilibrium for the 2nd regime.\n"; 
-				bad = true; 
+				#ifdef DEBUG_MESSAGE
+                        	cerr << "LogPosterior 2nd regime: Error occurred \n";
+				#endif
+				bad = true;  
 			}
-		
-		// Update x_input(locs_x2)
-		if (!bad)
-		{
-			for (unsigned int j=0; j<locs_x2.size(); j++)
-				x_input(locs_x2[j]) = xOptimal_2nd(locs_x2[j]); 			
-		}
-	
-		////////////////////////////////////////////////////////////
-		// Overall: all parameters
-		///////////////////////////////////////////////////////////
-		
-		// initialize and bound
-		if (!bad)
-		{
-			initial_xall = x_input; 
-			if( !bad && MakeLbUb_test(lb,ub,initial_xall.dim) != SUCCESS )
-			{
-                        	cerr << "MakeLbUb_test: Error occurred.\n";	
+			// optimizing
+			if (!bad && log_posterior_2nd <= CMSSM::MINUS_INFINITY_LOCAL)
 				bad = true; 
+			if (!bad)
+			{
+				if ((i%2 == 0) && model_2nd.Maximize_LogPosterior_NPSOL(lpOptimal_2nd,xOptimal_2nd,y2nd,z0_2nd,P0_2nd,initial_prob_2nd,initial_x2, ub,lb) == MODEL_NOT_PROPERLY_SET)
+				{
+					#ifdef DEBUG_MESSAGE
+					cout << "No equilibrium for the 2nd regime.\n"; 
+					#endif
+					bad = true; 
+				}
+				if ((i%2 == 1) && model_2nd.Maximize_LogPosterior_CSMINWEL(lpOptimal_2nd,xOptimal_2nd,y2nd,z0_2nd,P0_2nd,initial_prob_2nd,initial_x2) == MODEL_NOT_PROPERLY_SET)
+                        	{
+					#ifdef DEBUG_MESSAGE
+                                	cout << "No equilibrium for the 2nd regime.\n";
+					#endif
+                                	bad = true;
+                        	}
 			}
-		}
-		// log-posterior for initial_xall
-		if (!bad && model_all.LogPosterior(log_posterior_all, initial_xall, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
-		{
-                        cerr << "LogPosterior all: Error occurred \n";
-			bad = true; 
-		}
-		// optimize
-		if (!bad && log_posterior_all > CMSSM::MINUS_INFINITY_LOCAL)
-			if (model_all.Maximize_LogPosterior_NPSOL(lpOptimal_all,xOptimal_all,y,z0_1st,P0_1st,initial_prob_1st,initial_xall) == MODEL_NOT_PROPERLY_SET)
+			// Update x_input(locs_x2)
+			if (!bad)
 			{
-				cerr << "No equilibrium for the overall regime.\n"; 
-				bad = true; 
-				number_bad ++; 
+				for (unsigned int j=0; j<locs_x2.size(); j++)
+					x_input(locs_x2[j]) = xOptimal_2nd(locs_x2[j]); 			
 			}
 	
-		if (!bad)
-		{
-			// update x_input(locs_xall)
-			for (unsigned int j=0; j<locs_xall.size(); j++)
-				x_input(locs_xall[j]) = xOptimal_all(locs_xall[j]); 
+			////////////////////////////////////////////////////////////
+			// Overall: all parameters
+			///////////////////////////////////////////////////////////
+		
+			// initialize and bound
+			if (!bad)
+			{
+				initial_xall = x_input; 
+				if( !bad && MakeLbUb_test(lb,ub,initial_xall.dim) != SUCCESS )
+				{
+					#ifdef DEBUG_MESSAGE
+                        		cerr << "MakeLbUb_test: Error occurred.\n";	
+					#endif
+					bad = true; 
+				}
+			}
+			// log-posterior for initial_xall
+			if (!bad && model_all.LogPosterior(log_posterior_all, initial_xall, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+			{
+				#ifdef DEBUG_MESSAGE 
+                        	cerr << "LogPosterior all: Error occurred \n";
+				#endif
+				bad = true; 
+			}
+			// optimize
+			if (!bad && log_posterior_all <= CMSSM::MINUS_INFINITY_LOCAL)
+				bad = true; 
+			if (!bad )
+			{
+				if ((i%2==0) && model_all.Maximize_LogPosterior_NPSOL(lpOptimal_all,xOptimal_all,y,z0_1st,P0_1st,initial_prob_1st,initial_xall,ub, lb) == MODEL_NOT_PROPERLY_SET)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "No equilibrium for the overall regime.\n"; 
+					#endif
+					bad = true; 
+					number_bad ++; 
+				}
+				if ((i%2==1) && model_all.Maximize_LogPosterior_CSMINWEL(lpOptimal_all,xOptimal_all,y,z0_1st,P0_1st,initial_prob_1st,initial_xall) == MODEL_NOT_PROPERLY_SET)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "No equilibrium for the overall regime.\n"; 
+					#endif 
+					bad = true; 
+					number_bad ++; 
+				}
+			}
+			if (!bad)
+			{
+				// update x_input(locs_xall)
+				for (unsigned int j=0; j<locs_xall.size(); j++)
+					x_input(locs_xall[j]) = xOptimal_all(locs_xall[j]); 
 			
-			// log-likelihood for final solution x_input
-			if (!bad && model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
-			{
-				cerr << "LogLikelihood all: Error occurred\n"; 
-				bad = true; 
+				// log-likelihood for final solution x_input
+				if (!bad && model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "LogLikelihood all: Error occurred\n"; 
+					#endif
+					bad = true; 
+				}
+				// log_posterior for final solution x_input
+				if (!bad && model_all.LogPosterior(log_posterior_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+				{
+					#ifdef DEBUG_MESSAGE
+					cerr << "LogPosterior all: Error occurred\n"; 
+					#endif
+					bad = true; 
+				}
+				if (!bad)
+				{
+					solutions[initial_index*n_tries*2+i](0)=log_posterior_all; 
+					solutions[initial_index*n_tries*2+i](1)=log_likelihood_all; 
+					for (unsigned int j=0; j<x_input.dim; j++)
+						solutions[initial_index*n_tries*2+i][j+2] = x_input[j]; 
+					if (log_posterior_all > best_solution[0])
+						best_solution = solutions[initial_index*n_tries*2+i]; 
+				}
 			}
-			// log_posterior for final solution x_input
-			if (!bad && model_all.LogPosterior(log_posterior_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
-			{
-				cerr << "LogPosterior all: Error occurred\n"; 
-				bad = true; 
-			}
-			solutions[i](0)=log_posterior_all; 
-			solutions[i](1)=log_likelihood_all; 
-			for (unsigned int j=0; j<x_input.dim; j++)
-				solutions[i][j+2] = x_input[j]; 
-			if (log_posterior_all > best_solution[0])
-				best_solution = solutions[i]; 
+			i++; 
 		}
-		i++; 
-	}		
+	}	
 
 	// Output results
 	ofstream output_file; 
-	if (output_file_name.length() > 0)
-		output_file.open(output_file_name.c_str()); 
-	if (output_file_name.length() > 0 && output_file)
+	output_file.open(output_file_name.c_str()); 
+	if (output_file)
 	{
 		/*output_file << "================== best solution =====================\n";
                 for (unsigned int i=0; i<best_solution.dim; i++)
                 	output_file << setprecision(20) << best_solution[i] << " ";
                 output_file << endl;*/
         
-               	 for (unsigned int i=0; i<n_tries; i++)
+               	 for (unsigned int i=0; i<solutions.size(); i++)
                 {
                         // output_file << "\n ================ solution: " << i << "=====================\n";
                         for (unsigned int j=0; j<solutions[i].dim; j++)
@@ -429,7 +495,7 @@ int main(int argc, char **argv)
 			cout << setprecision(20) << best_solution[i] << " "; 
 		cout << endl; */
 
-		for (unsigned int i=0; i<n_tries; i++)
+		for (unsigned int i=0; i<solutions.size(); i++)
 		{
 			// cout << "\n ================ solution: " << i << "=====================\n"; 
 			for (unsigned int j=0; j<solutions[i].dim; j++)

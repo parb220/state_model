@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	TDenseVector xOptimal(nFree); 
 
 	TDenseVector best_solution(nFree+1, 0.0);
-	best_solution.SetElement(CMSSM::MINUS_INFINITY, 0); 
+	best_solution.SetElement(CMSSM::MINUS_INFINITY_LOCAL, 0); 
 	vector<TDenseVector> solutions; 
 	bool if_search_initial;  
 	if (initialX.empty())

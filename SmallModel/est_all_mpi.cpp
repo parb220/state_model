@@ -68,14 +68,14 @@ int main(int argc, char **argv)
                 abort();
         }
 
-	// random number generator
-	dw_initialize_generator(time(NULL));
-
 	// Initialize MPI 
 	MPI_Init(&argc, &argv);
 	int my_rank; 
 	MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+	// random number generator
+	dw_initialize_generator(time(NULL)+my_rank*200);
+	
 	if (my_rank == 0)
 		est_all_master(n_iterations, n_seeds, output_file_name); 
 	else 

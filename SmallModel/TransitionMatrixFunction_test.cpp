@@ -31,8 +31,8 @@ int TransitionProbMatrixFunction_test :: convert(TDenseMatrix &Q, unsigned int t
 	//
 	if (nTL >= 1)
 	{
-		size_t n = (size_t)pow(nS, nTL-1);  
-		size_t nXi = (size_t)pow(nS, nTL+1); 
+		size_t n = (size_t)pow((double)nS, (int)(nTL-1));  
+		size_t nXi = (size_t)pow((double)nS, (int)(nTL+1)); 
 		Q.Zeros(nXi,nXi);
 		for (unsigned int i=0; i<nS; i++)		// i = s(t+1)
 			for (unsigned int j=0; j<nS; j++)	// j = s(t)

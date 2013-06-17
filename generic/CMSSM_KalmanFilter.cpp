@@ -70,8 +70,8 @@ int CMSSM::KalmanFilter(double &log_likelihood, vector<vector<TDenseVector> > &z
 	
 	// Sizes and constants
 	size_t T = y.size(); 	
-	size_t loop_2 = (size_t)pow(nS,nL); 
-	size_t loop_1 = (size_t)pow(nS,nTL-nL); 
+	size_t loop_2 = (size_t)pow((double)nS,(int)nL); 
+	size_t loop_1 = (size_t)pow((double)nS,(int)(nTL-nL)); 
 	
 	// output values
 	z_tm1 = vector<vector<TDenseVector> >(T,vector<TDenseVector>(nXi) );  

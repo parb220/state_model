@@ -32,6 +32,9 @@ void est_all_master(size_t n_iterations, size_t n_seeds, const string &output_fi
 	string file_name; 
 	stringstream convert; 
 
+	int nX=0; 
+	while (nX==0)
+		nX=0; 
 	for (unsigned int i_iteration=0; i_iteration<n_iterations; i_iteration++)
 	{
 		best_solutions.clear(); 

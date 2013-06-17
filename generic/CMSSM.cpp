@@ -43,9 +43,9 @@ transition_prob_function(_tpmf),
 prior_distr_function(_priordf),
 current_x(_cx)
 {
-	nNu = (size_t)pow(nS, nL+1); 
-	nXi = (size_t)pow(nS, nTL+1); 
-	nZeta = (size_t)pow(nS, nTL); 
+	nNu = (size_t)pow((double)nS, (int)nL+1); 
+	nXi = (size_t)pow((double)nS, (int)nTL+1); 
+	nZeta = (size_t)pow((double)nS, (int)nTL); 
 	
 	A = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) ); 
 	B = vector<vector<TDenseMatrix> >(0,vector<TDenseMatrix>(0) ); 

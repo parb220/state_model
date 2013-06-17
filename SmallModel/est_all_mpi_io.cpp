@@ -51,7 +51,7 @@ int SaveSeed(const string &file_name, const vector<TDenseVector> &best_solutions
 	ofstream output_file(file_name.c_str()); 
 	if (!output_file)
 		return IO_ERROR; 
-	output_file << best_solutions.size() << "\t" << best_solutions[0].dim << endl; 	
+	output_file << best_solutions.size() << "\t" << best_solutions[0].dim -2<< endl; 	
 	for (unsigned int i=0; i<best_solutions.size(); i++)
 	{
 		for (unsigned int j=2; j<best_solutions[i].dim; j++)

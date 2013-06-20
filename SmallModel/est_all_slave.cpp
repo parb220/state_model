@@ -176,10 +176,6 @@ void est_all_slave(const string & data_file_name, const string & initial_value_f
 	string seed_file_name, local_output_file_name; 
 	stringstream convert; 
 
-	int nX=0; 
-	while (nX==0)
-		nX=0; 
-
 	while (1)
 	{
 		MPI_Recv(&rMessage, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); 

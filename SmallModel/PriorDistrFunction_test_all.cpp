@@ -158,27 +158,41 @@ double PriorDistrFunction_test_all::log_pdf(const TDenseVector &x)
 	i_ ++; 
 	j_ ++; 
 
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x(i_)-1.0), 1.0) ); 
+	// Per Dan's suggestions on 06/18/2013, giota ~ N(0,1)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(i_), 1.0) ); 
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(i_)-1.0), 1.0) ); 
 	// Interval [-1, 1]; giota (level adjustment for ZLB drop in the interest rate)
 	i_ ++; 	
 
 	// Gamma_{2,1}: Can be only identified through transitions.  The first three is not useful because there is only one endogenous error for this case.
 	
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
+	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
+	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 
 	// Delta_{2,2}: Can be only identified through staying in ZLB regime.  The first three is not useful because there is only one endogenous error for this case.
 	
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
+	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
+	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
+	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
+	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
+	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
+	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );	
+	//log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 

@@ -27,7 +27,9 @@ double PriorDistrFunction_test_2nd::log_pdf(const TDenseVector &x2)
 	double log_prior_pdf = 0.0; 
 	
 	unsigned int count = 0; 
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
+	// Per Dan's suggestion on 06/18/2013, giota ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x2(count), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
 	// Interval [-1, 1]; giota (level adjustment for ZLB drop in the interest rate)
 	count ++; 
 	
@@ -78,14 +80,19 @@ double PriorDistrFunction_test_2nd::log_pdf(const TDenseVector &x2)
 	count ++; 
 	
 	// Gamma_{2,1}: can only be identified through transiitons
-	
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
+
+	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)	
+	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x2(count), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
 	// Interval [-1, 1], Sunspot component
 	count ++;
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x2(count), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
 	// Interval [-1, 1], Sunspot component
 	count ++; 
-	log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x2(count), 1.0) );
+	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x2(count)-1.0), 1.0) ); 
 	// Interval [-1, 1], Sunspot component
 	count ++;
 

@@ -32,9 +32,6 @@ void est_all_master(size_t n_iterations, size_t n_seeds, const string &output_fi
 	string file_name; 
 	stringstream convert; 
 
-	int nX=0; 
-	while (nX==0)
-		nX=0; 
 	for (unsigned int i_iteration=0; i_iteration<n_iterations; i_iteration++)
 	{
 		best_solutions.clear(); 
@@ -68,15 +65,15 @@ void est_all_master(size_t n_iterations, size_t n_seeds, const string &output_fi
 					abort(); 
 				}
 			}
-			// save seeds
-			convert.str(string()); 
-			convert << "." << i_iteration+1 << ".ini"; 
-			file_name = output_file_name + convert.str(); 
-			if (SaveSeed(file_name, best_solutions) != IO_SUCCESS)
-			{
-				cerr << "Error in saving seeds to " << file_name << endl; 
-				abort(); 
-			}
+		}
+		// save seeds
+		convert.str(string()); 
+		convert << "." << i_iteration+1 << ".ini"; 
+		file_name = output_file_name + convert.str(); 
+		if (SaveSeed(file_name, best_solutions) != IO_SUCCESS)
+		{
+			cerr << "Error in saving seeds to " << file_name << endl; 
+			abort(); 
 		}
 	}
 

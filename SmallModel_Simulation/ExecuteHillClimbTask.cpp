@@ -14,7 +14,7 @@ using namespace std;
 
 TDenseVector InitializeParameter(size_t n, const TDenseVector &fixed_parameter);
 
-int HillClimb(double &log_posterior_optimal, TDenseVector &x_optimal, const TDenseVector &x0, CMSSM_test_1st &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test_1st & model_all, const vector<int> &locs_x1, const vector<int> &locs_x2, const vector<int> &locs_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y); 
+int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test_1st &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test_1st & model_all, const vector<int> &locs_x1, const vector<int> &locs_x2, const vector<int> &locs_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y); 
 
 double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, const vector<int> &locs_x1, const vector<int> &locs_x2, const vector<int> &locs_xall, CMSSM_test_1st &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test_1st &model_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y, const CEESParameter &parameter, CStorageHead &storage)
 {
@@ -34,9 +34,8 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, c
 	{
 		x0= InitializeParameter(nFree, fixed_parameter);
 
-		if (HillClimb(sample.weight, sample.data, x0, model_1st, model_2nd, model_all, locs_x1, locs_x2, locs_xall, y1st, y2nd, y) == SUCCESS)
+		if (HillClimb(sample, x0, model_1st, model_2nd, model_all, locs_x1, locs_x2, locs_xall, y1st, y2nd, y) == SUCCESS)
 		{
-			sample.id = 0;
 			int bIndex = parameter.BinIndex(-sample.weight, level); 
 			storage.DepositSample(bIndex, sample); 
 			max_log_posterior = max_log_posterior > sample.weight ? max_log_posterior : sample.weight; 

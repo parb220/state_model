@@ -22,7 +22,7 @@ bool ExecuteSimulationTask(double &max_log_posterior, bool if_within, bool if_wr
 	string start_point_file = parameter.storage_dir + convert.str(); 
 	if (!model.InitializeFromFile(start_point_file) && (storage.empty(parameter.BinIndex_Start(model.energy_level+1), parameter.BinIndex_End(model.energy_level+1) ) || !model.Initialize(storage, parameter.BinIndex_Start(model.energy_level+1), parameter.BinIndex_End(model.energy_level+1), pool_size)) )
 		return false; 
-
+	
 	// metropolis
         convert.str(string());
         if (message_tag == TUNE_TAG_SIMULATION_FIRST)

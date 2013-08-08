@@ -6,6 +6,7 @@
 #include "dw_rand.h"
 #include "CSampleIDWeight.h"
 #include "CEESParameter.h"
+#include "mpi_parameter.h"
 #include "CStorageHead.h"
 #include "simulation.hpp"
 
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 	parameter.c_factor = 1.0; 
 	parameter.deposit_frequency = 50; 
 	parameter.simulation_length = 10000; 
-	size_t n_initial = (size_t)nNode; 
+	size_t n_initial = 1; 
 	size_t number_hill_climb = 0; 
 	bool if_tuning_done = false; 
 
@@ -126,7 +127,18 @@ int main(int argc, char **argv)
 	CStorageHead storage(parameter.run_id, parameter.storage_marker, number_bin, parameter.storage_dir, my_rank); 
 
 	if (my_rank == 0)
+	{
+		if(!storage.makedir())
+		{
+			cerr << "Error in making directory for " << parameter.run_id << endl;
+			double *sMessage= new double [N_MESSAGE];
+			for (unsigned int i=1; i<nNode; i++)
+				MPI_Send(sMessage, N_MESSAGE, MPI_DOUBLE, i, END_TAG, MPI_COMM_WORLD); 
+			delete [] sMessage; 
+			exit(1);  
+		}
 		master_deploying(nNode, if_tuning_done, number_hill_climb, n_initial, parameter, storage); 
+	}
 	else 
 		slave_computing(if_original, number_hill_climb, n_initial, data_file_name, minus_infinity, parameter, storage); 
 }

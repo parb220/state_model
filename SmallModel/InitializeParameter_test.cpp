@@ -56,7 +56,7 @@ TDenseVector InitializeParameter(size_t n, const TDenseVector &fixed_parameter)
 
 int RandomInit_test_1st(TDenseVector &x, const vector<int> &pos)
 {
-	if (x.dim < pos.size())
+	if (x.dim < (int)pos.size())
 		return ERROR_OCCURRED; 
 	
 	x(0)  = 0.0025 + dw_uniform_rnd()/200;   	// Steady state quarterly rate of inflation (decimal) (e.g. 0.5/100 (0.005) quarterly corresponding to log(1.02) or 2% annually)
@@ -78,57 +78,20 @@ int RandomInit_test_1st(TDenseVector &x, const vector<int> &pos)
 
 int RandomInit_test_2nd(TDenseVector &x, const vector<int> &pos)
 {
-	unsigned int count = 0; 
-	if (pos[count] >= x.dim)
+	if (x.dim < (int)pos.size())
 		return ERROR_OCCURRED; 
-	x(pos[count]) = dw_gaussian_rnd();	// giota (level adjustment for ZLB drop in the interest rate)
-	count ++; 
-	if (pos[count] >= x.dim)
-		return ERROR_OCCURRED; 
-	x(pos[count]) = dw_uniform_rnd(); 	// [0 1]; grhomu (persistence to markup)
+	x(0) = dw_gaussian_rnd();	// giota (level adjustment for ZLB drop in the interest rate)
+	x(1) = dw_uniform_rnd(); 	// [0 1]; grhomu (persistence to markup)
+	x(2) = dw_uniform_rnd(); 	// [0 1]; grhorn (persistence to natural rate of interest)
+	x(3) = dw_uniform_rnd(); 	// [0 1]; grhoi (persistence to monetary policy)
+	x(4) = dw_uniform_rnd()/100; 	// [0.0 0.01]; gsigmamu (s.d. of markup shock)
+	x(5) = dw_uniform_rnd()/100;	// [0.0 0.01]; gsigmarn (s.d. of demand shock)
+	x(6) = 1.0+dw_uniform_rnd()*1.5; 	// [1.0 2.5]; gsigmai (scl4gsigmai * s.d. of policy shock)
+	x(7) = dw_gaussian_rnd(); 	// Interval [-1, 1]; Sunspot component
 
-	count ++; 
-	if (pos[count] >= x.dim)
-                return ERROR_OCCURRED;
-	x(pos[count]) = dw_uniform_rnd(); 	// [0 1]; grhorn (persistence to natural rate of interest)
-
-	count ++; 
-	if (pos[count] >= x.dim)
-		return ERROR_OCCURRED; 
-	x(pos[count]) = dw_uniform_rnd(); 	// [0 1]; grhoi (persistence to monetary policy)
-
-	count ++; 
-	if (pos[count] >= x.dim)
-                return ERROR_OCCURRED;
-	x(pos[count]) = dw_uniform_rnd()/100; 	// [0.0 0.01]; gsigmamu (s.d. of markup shock)
-
-	count ++; 
-	if (pos[count] >= x.dim)
-		return 	ERROR_OCCURRED; 
-	x(pos[count]) = dw_uniform_rnd()/100;	// [0.0 0.01]; gsigmarn (s.d. of demand shock)
-
-	count ++; 
-	if (pos[count] >= x.dim)
-		return ERROR_OCCURRED; 
-	x(pos[count]) = 1.0+dw_uniform_rnd()*1.5; 	// [1.0 2.5]; gsigmai (scl4gsigmai * s.d. of policy shock)
-	count ++; 
-	if (pos[count] >= x.dim)
-		return ERROR_OCCURRED; 
-	x(pos[count]) = dw_gaussian_rnd(); 	// Interval [-1, 1]; Sunspot component
-
-	count ++;
-        if (pos[count] >= x.dim)
-                return ERROR_OCCURRED;
-        x(pos[count]) = dw_gaussian_rnd();      // Interval [-1, 1]; Sunspot component
+        x(8) = dw_gaussian_rnd();      // Interval [-1, 1]; Sunspot component
 	
-	count ++;
-        if (pos[count] >= x.dim)
-                return ERROR_OCCURRED;
-        x(pos[count]) = dw_gaussian_rnd();      // Interval [-1, 1]; Sunspot component
-
-	count ++; 
-	if (count != pos.size())
-		return ERROR_OCCURRED; 
+        x(9) = dw_gaussian_rnd();      // Interval [-1, 1]; Sunspot component
 
 	return SUCCESS; 
 }

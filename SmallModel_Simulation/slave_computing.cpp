@@ -3,11 +3,11 @@
 #include <mpi.h>
 #include <cstdlib>
 #include "dw_dense_matrix.hpp"
-#include "CMSSM_test_1st.hpp"
+#include "CMSSM_test.hpp"
 #include "CMSSM_test_2nd.hpp"
 #include "CEESParameter.h"
 #include "CStorageHead.h"
-#include "CEquiEnergy_CMSSM.hpp"
+#include "CEquiEnergy_CMSSM_test.hpp"
 #include "CMetropolis.h"
 #include "mpi_parameter.h"
 #include "slave_computing.hpp"
@@ -42,24 +42,23 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 	CMSSM::MINUS_INFINITY_LOCAL = minus_infinity;
 	size_t nFree = 21+8+2;  // 21 (15+6): model parameters; 6=2X3 (Delta in Dan's sunspont notation) + 2=2x1 (gamma in Dan's sunspot notation): sunspot parameters (with 2 endogeneous errors and 3 fundamental shocks); 2 probabilites of staying in ZLB
 
-	vector<int> locs_x1, locs_x2, locs_xall; //locations of parameters for 1st and 2nd regimes, and for all parameters
 	TDenseVector fixed_parameter; 	//fixed_parameters for (RationalExpectationFunction, StateEquationFunction, MeasurementEquationFunction) and TransitionProbMatrix
-	CMSSM_test_1st model_1st;
+	CMSSM_test model_1st;
 	CMSSM_test_2nd model_2nd; 
-	CMSSM_test_1st model_all; 
-	SetUpModel(nY, fixed_parameter, locs_x1, locs_x2, locs_xall, model_1st, model_2nd, model_all); 
+	CMSSM_test model_all; 
+	SetUpModel(nFree, nY, fixed_parameter, model_1st, model_2nd, model_all); 
 	
 	double max_log_posterior = CMSSM::MINUS_INFINITY_LOCAL; 
 	
 	// HillClimb
 	if (number_hill_climb > 0)
 	{
-		double received_log_posterior = ExecuteHillClimbTask(nFree, fixed_parameter, locs_x1, locs_x2, locs_xall, model_1st, model_2nd, model_all, y1st, y2nd, y, parameter, storage); 
+		double received_log_posterior = ExecuteHillClimbTask(nFree, fixed_parameter, model_1st, model_2nd, model_all, y1st, y2nd, y, parameter, storage); 
 		max_log_posterior = max_log_posterior > received_log_posterior ? max_log_posterior : received_log_posterior; 
 	}
 
 	// EquiEnergyModel 
-	CEquiEnergy_CMSSM simulation_model; 
+	CEquiEnergy_CMSSM_test simulation_model; 
 	simulation_model.target_model = &model_all; 
 	simulation_model.timer_when_started = time(NULL); 
 	if (if_original)

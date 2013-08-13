@@ -25,7 +25,7 @@ class CMSSM;
 class PriorDistributionFunction
 {
 protected: 
-        TDenseVector fixed_parameter;     
+        TDenseVector fixed_parameter;    
 public:
 	virtual double log_pdf(const TDenseVector &x) = 0; 
 	PriorDistributionFunction():fixed_parameter() {}
@@ -177,7 +177,6 @@ protected:
 	TDenseVector current_x; 	// x that have just been used to setup 
 					// state equation, measurement equation
 					// and transition probability matrix
-
 public:
 	// fixed parameters exterior to CMSSM
 	/*
@@ -222,6 +221,7 @@ public:
 	virtual int Maximize_LogPosterior_NPSOL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0, const TDenseVector &ub=TDenseVector(), const TDenseVector &lb=TDenseVector());
 	virtual int Maximize_LogPosterior_CSMINWEL(double &log_posterior_optimal, TDenseVector &x_optimal, const vector<TDenseVector> &y, const vector<TDenseVector> &z_0, const vector<TDenseMatrix> &P_0, const TDenseVector &initial_prob, const TDenseVector &x0);
 
+
 	// Constructor and destrunctor 
 	CMSSM();
 	// fixed parameters are exterior to CMSSM
@@ -232,7 +232,7 @@ public:
 	
 	CMSSM(const CMSSM &right); 
 	CMSSM &operator=(const CMSSM &right); 
-	~CMSSM() {}
+	virtual ~CMSSM() {}
 
 protected:
 	int UpdateStateEquationParameter(unsigned int t, const vector<TDenseVector> &y, const TDenseVector &x); 

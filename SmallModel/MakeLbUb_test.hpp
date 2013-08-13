@@ -4,5 +4,6 @@
 #include "dw_dense_matrix.hpp"
 
 int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice=1);
+int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, const vector<int> &locs, size_t bDim, int choice=1);
 
 #endif

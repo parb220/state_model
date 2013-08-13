@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <fstream>
 #include "dw_dense_matrix.hpp"
-#include "CEquiEnergy_CMSSM.hpp"
+#include "CEquiEnergy_CMSSM_test.hpp"
 #include "CStorageHead.h"
 #include "CEESParameter.h"
 #include "CMetropolis.h"
@@ -10,7 +10,7 @@
 #include "storage_parameter.h"
 
 using namespace std; 
-bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM &model, CStorageHead &storage, const CEESParameter &parameter, unsigned int group_index, size_t pool_size)
+bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, CStorageHead &storage, const CEESParameter &parameter, unsigned int group_index, size_t pool_size)
 {
 	// start point
 	storage.RestoreForFetch(parameter.BinIndex_Start(model.energy_level+1), parameter.BinIndex_End(model.energy_level+1) );
@@ -28,7 +28,16 @@ bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiE
 	if (!output_file)
 		return false; 
 	else 
-		write(output_file, &model.current_sample); 
+	{
+		CSampleIDWeight x_complete; 
+		vector<int> locs_variable=model.target_model->locs_variable(); 
+		vector<int> locs_constant=model.target_model->locs_constant(); 
+		x_complete.data.Resize(locs_variable.size()+locs_constant.size()); 
+		x_complete.data.SetSubVector(locs_variable, model.current_sample.data); 
+		x_complete.data.SetSubVector(locs_constant, model.target_model->GetConstantPart()); 	
+	
+		write(output_file, &x_complete); 
+	}
 	output_file.close(); 
 	
 	// tuning 
@@ -60,7 +69,7 @@ bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiE
 }
 
 
-bool ExecuteTuningTask_AfterSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM &model, const CEESParameter &parameter, unsigned int group_index)
+bool ExecuteTuningTask_AfterSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, const CEESParameter &parameter, unsigned int group_index)
 {
 	// start point
 	stringstream convert; 

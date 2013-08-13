@@ -3,7 +3,7 @@
 #include "dw_dense_matrix.hpp"
 #include "CMSSM.hpp" 
 #include "CMSSM_Error_Code.hpp"
-#include "CMSSM_test_1st.hpp"
+#include "CMSSM_test.hpp"
 #include "CMSSM_test_2nd.hpp"
 #include "CSampleIDWeight.h"
 #include "CEESParameter.h"
@@ -14,9 +14,9 @@ using namespace std;
 
 TDenseVector InitializeParameter(size_t n, const TDenseVector &fixed_parameter);
 
-int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test_1st &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test_1st & model_all, const vector<int> &locs_x1, const vector<int> &locs_x2, const vector<int> &locs_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y); 
+int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test & model_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y); 
 
-double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, const vector<int> &locs_x1, const vector<int> &locs_x2, const vector<int> &locs_xall, CMSSM_test_1st &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test_1st &model_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y, const CEESParameter &parameter, CStorageHead &storage)
+double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, CMSSM_test &model_1st, CMSSM_test_2nd &model_2nd, CMSSM_test &model_all, const vector<TDenseVector> &y1st, const vector<TDenseVector> &y2nd, const vector<TDenseVector> &y, const CEESParameter &parameter, CStorageHead &storage)
 {
 	double *rPackage = new double[N_MESSAGE]; 
 	MPI_Status status; 
@@ -34,7 +34,7 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, c
 	{
 		x0= InitializeParameter(nFree, fixed_parameter);
 
-		if (HillClimb(sample, x0, model_1st, model_2nd, model_all, locs_x1, locs_x2, locs_xall, y1st, y2nd, y) == SUCCESS)
+		if (HillClimb(sample, x0, model_1st, model_2nd, model_all, y1st, y2nd, y) == SUCCESS)
 		{
 			int bIndex = parameter.BinIndex(-sample.weight, level); 
 			storage.DepositSample(bIndex, sample); 

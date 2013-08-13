@@ -18,7 +18,7 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 	double max_log_posterior,  received_log_posterior; 
 	size_t estimation_length; 
 
-	for (unsigned int level=parameter.highest_level; level>=parameter.lowest_level; level--)
+	for (int level=parameter.highest_level; level>=parameter.lowest_level; level--)
 	{
 		sPackage[LEVEL_INDEX] = level; 
 		sPackage[H0_INDEX] = parameter.h0;
@@ -33,13 +33,11 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 			MPI_Send(sPackage, N_MESSAGE, MPI_DOUBLE, nodeGroup[i][0], TUNE_TAG_BEFORE_SIMULATION, MPI_COMM_WORLD); 
 		}
 		for (unsigned int i=0; i<nodeGroup.size(); i++)
-		{
 			MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, MPI_ANY_SOURCE, TUNE_TAG_BEFORE_SIMULATION, MPI_COMM_WORLD, &status);
-		}
 
 		// Simulation to estimate group-specific covariance matrix
 		estimation_length = 5000; 
-		max_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_FIRST); 
+		max_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_FIRST);
 
 		// Tune after simulation
 		for (unsigned int i=0; i<nodeGroup.size(); i++)

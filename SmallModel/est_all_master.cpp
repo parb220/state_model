@@ -36,10 +36,10 @@ void est_all_master(size_t n_iterations, size_t n_seeds, const string &output_fi
 	{
 		best_solutions.clear(); 
 		sMessage = i_iteration; 
-		for (unsigned int i_node =1; i_node<n_nodes; i_node ++)
+		for (unsigned int i_node =1; i_node<(int)n_nodes; i_node ++)
 			MPI_Send(&sMessage, 1, MPI_INT, i_node, WORK_TAG, MPI_COMM_WORLD); 
 		
-		for (unsigned int i_node =1; i_node<n_nodes; i_node ++)
+		for (unsigned int i_node =1; i_node<(int)n_nodes; i_node ++)
 		{
 			MPI_Recv(&rMessage, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);				if (status.MPI_TAG == WORK_TAG)
 			{
@@ -79,6 +79,6 @@ void est_all_master(size_t n_iterations, size_t n_seeds, const string &output_fi
 
 	// end 
 	sMessage = 0; 
-	for (unsigned int i_node =1; i_node<n_nodes; i_node ++)
+	for (unsigned int i_node =1; i_node<(int)n_nodes; i_node ++)
 		MPI_Send(&sMessage, 1, MPI_INT, i_node, FINISH_TAG, MPI_COMM_WORLD);
 }

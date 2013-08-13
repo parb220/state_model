@@ -2,17 +2,17 @@
 #define _EQUI_ENERGY_CMSSM_
 
 #include "CEquiEnergyModel.h"
-#include "CMSSM.hpp"
+#include "CMSSM_test.hpp"
 
 class TDenseVector; 
 class TDenseMatrix; 
 class CStorageHead; 
 class CEESParameter; 
 
-class CEquiEnergy_CMSSM : public CEquiEnergyModel
+class CEquiEnergy_CMSSM_test : public CEquiEnergyModel
 {
 public:
-	CMSSM *target_model; 
+	CMSSM_test *target_model; 
 	vector<TDenseVector> y; 
 	vector<TDenseVector> z_0;
 	vector<TDenseMatrix> P_0; 
@@ -25,9 +25,12 @@ public:
 	virtual double log_likelihood_function(const CSampleIDWeight &x); 
 	// returning value is the real log_likelihood calculated from target_model
 	
-	CEquiEnergy_CMSSM(); 
-	CEquiEnergy_CMSSM(bool _if_bounded, unsigned int eL, double _h, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM *_model); 
-	virtual ~CEquiEnergy_CMSSM(); 
+	CEquiEnergy_CMSSM_test(); 
+	CEquiEnergy_CMSSM_test(bool _if_bounded, unsigned int eL, double _h, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model); 
+	virtual ~CEquiEnergy_CMSSM_test(); 
+
+	virtual void SaveSampleToStorage(const CSampleIDWeight &sample, unsigned int, CStorageHead &storage);
+	virtual void Take_Sample_Just_Drawn_From_Storage(const CSampleIDWeight &x_complete); 
 };
 
 #endif 

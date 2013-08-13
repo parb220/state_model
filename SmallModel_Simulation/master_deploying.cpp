@@ -37,7 +37,7 @@ int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb
 		max_log_posterior=DispatchTuneSimulation(node_group, parameter, storage); 	
 	else 
 	{
-		for (unsigned int level=parameter.highest_level; level>=parameter.lowest_level; level--)
+		for (int level=parameter.highest_level; level>=parameter.lowest_level; level--)
 		{
 			received_log_posterior=DispatchSimulation(node_group, parameter, storage, parameter.simulation_length, level, SIMULATION_TAG);
 			if (level == parameter.highest_level)

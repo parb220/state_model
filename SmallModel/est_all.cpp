@@ -14,7 +14,7 @@
 #include "TransitionMatrixFunction_test.hpp" 
 #include "MakeLbUb_test.hpp"
 #include "ReadWriteFile.hpp"
-#include "CMSSM_test_1st.hpp"
+#include "CMSSM_test.hpp"
 #include "CMSSM_test_2nd.hpp"
 #include "PriorDistrFunction_test_1st.hpp"
 #include "PriorDistrFunction_test_2nd.hpp"
@@ -71,22 +71,37 @@ int main(int argc, char **argv)
 	// Hubrid NK model (standard reduced form)
 	size_t nFree = 21+8+2;	// 21 (15+6): model parameters; 6=2X3 (Delta in Dan's sunspont notation) + 2=2x1 (gamma in Dan's sunspot notation): sunspot parameters (with 2 endogeneous errors and 3 fundamental shocks); 2 probabilites of staying in ZLB
 	size_t n1 = 14; 	// Number of parameters staying in Regime 1
-	vector<int> locs_x1, locs_x2, locs_xall;	// locations of parameters for 1st and 2nd regimes, and for all parameters 
+	vector<int> locs_variable_x1, locs_variable_x2, locs_variable_xall;	// locations of variable parameters for 1st and 2nd regimes, and for all regimes 
+	vector<int> locs_constant_x1, locs_constant_x2, locs_constant_xall;	// locations of invariable parameters for 1st and 2nd regimes, and for all regimes  
+	// locs_variable_x1 : [0:n1); 
 	for (unsigned int i=0; i<n1; i++)
-	{
-		locs_x1.push_back(i); 
-		locs_xall.push_back(i); 
-	}
+		locs_variable_x1.push_back(i); 
+	for (unsigned int i=n1; i<nFree; i++)
+		locs_constant_x1.push_back(i); 
+
+	// locs_variable_x2 : [n1:n1+7), [n1+7+5: n1+7+5+3)
+	for (unsigned int i=0; i<n1; i++)
+		locs_constant_x2.push_back(i); 
 	for (unsigned int i=n1; i<n1+7; i++)
-	{
-		locs_xall.push_back(i); 
-		locs_x2.push_back(i); 
-	}
+		locs_variable_x2.push_back(i); 
+	for (unsigned int i=n1+7; i<n1+7+5; i++)
+		locs_constant_x2.push_back(i); 
 	for (unsigned int i=n1+7+5; i<n1+7+5+3; i++)
-		locs_x2.push_back(i); 
-	locs_xall.push_back(n1+6+2); 
-	for (unsigned int i=n1+6+2+4; i<n1+7+2+7; i++)
-		locs_xall.push_back(i); 
+		locs_variable_x2.push_back(i);
+	for (unsigned int i=n1+7+5+3; i<nFree; i++)
+		locs_constant_x2.push_back(i); 
+
+	// locs_variable_xall : [1:n1+7), n1+7+1, [n1+7+5,n1+7+5+4)
+	for (unsigned int i=0; i<n1+7; i++)
+		locs_variable_xall.push_back(i); 
+	locs_constant_xall.push_back(n1+7); 
+	locs_variable_xall.push_back(n1+7+1);
+	for (unsigned int i=n1+7+2; i<n1+7+5; i++)
+		locs_constant_xall.push_back(i); 
+	for (unsigned int i=n1+7+5; i<n1+7+9; i++)
+		locs_variable_xall.push_back(i); 
+	for (unsigned int i=n1+7+9; i<nFree; i++)
+		locs_constant_xall.push_back(i); 
 	
 	// fixed_parameters for (RationalExpectationFunction, StateEquationFunction, MeasurementEquationFunction) and TransitionProbMatrix
 	TDenseVector fixed_parameter(3);
@@ -117,7 +132,6 @@ int main(int argc, char **argv)
 		abort(); 
 	}
 	/* Read in data: end */
-	size_t nSample = qdata.size(); 	// total sample size
 	size_t nY = qdata[0].dim;	// number of observables
 	vector<TDenseVector> y = qdata; 
 	/* Switch order of qdata, so that the new order is [1 0 2]
@@ -155,11 +169,11 @@ int main(int argc, char **argv)
 	StateEquationFunction_test *state_equation_func = new StateEquationFunction_test(fixed_parameter); 
 	MeasurementEquationFunction_test *measurement_equation_func = new MeasurementEquationFunction_test(fixed_parameter); 
 	TransitionProbMatrixFunction_test *transition_prob_func = new TransitionProbMatrixFunction_test(fixed_parameter); 
-	CMSSM_test_1st model_1st(locs_x1, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_1st(fixed_parameter) ); 
+	CMSSM_test model_1st(locs_variable_x1, locs_constant_x1, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_1st(fixed_parameter) ); 
 	
-	CMSSM_test_2nd model_2nd(locs_x2, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_2nd(fixed_parameter) ); 
+	CMSSM_test_2nd model_2nd(locs_variable_x2, locs_constant_x2, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_2nd(fixed_parameter) ); 
 	
-	CMSSM_test_1st model_all(locs_xall, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_all(fixed_parameter) ); 
+	CMSSM_test model_all(locs_variable_xall, locs_constant_xall, nL, nTL, nS, nZ, nY, nU, nE, nExpectation, rational_expectation_func, state_equation_func, measurement_equation_func, transition_prob_func, new PriorDistrFunction_test_all(fixed_parameter) ); 
 
 	// 1st regime (s_t*, s_{t-1}*) = (1*, 1*)
 	// Starts in state one with probability one
@@ -173,15 +187,14 @@ int main(int argc, char **argv)
 		z0_1st[i].Zeros(model_1st.nZ); 
 		P0_1st[i]=Identity(model_1st.nZ)*100.0;
 	}
-	double log_likelihood_1st, log_likelihood_2nd, log_likelihood_all; 
+	double log_likelihood_1st, log_likelihood_all; 
 	double log_posterior_1st, log_posterior_2nd, log_posterior_all; 
 
 	vector<TDenseVector> z_tm1_last_1st, z_tm1_last_2nd, z_tm1_last_all; 
        	vector<TDenseMatrix> P_tm1_last_1st, P_tm1_last_2nd, P_tm1_last_all; 
        	TDenseVector p_tm1_last_1st, p_tm1_last_2nd, p_tm1_last_all; 
 	
-	TDenseVector initial_prob_2nd(model_2nd.nXi); 
-	initial_prob_2nd.Zeros(); 
+	TDenseVector initial_prob_2nd(model_2nd.nXi,0.0); 
        	initial_prob_2nd(10) = 1.0;     // 10: the position for (3*, 3*) (staying in the ZLB regime)
 	vector<TDenseVector> z0_2nd(model_2nd.nXi); 
 	vector<TDenseMatrix> P0_2nd(model_2nd.nXi); 
@@ -255,14 +268,13 @@ int main(int argc, char **argv)
 			//////////////////////////////////////////////////////
 			// First block: 1st regime parameters only 
 			/////////////////////////////////////////////////////
-	
+			if(!bad && model_1st.SetConstantPart(x_input.SubVector(model_1st.locs_constant())) == ERROR_OCCURRED)
+				bad = true;	
 			// initialize
 			if (!bad)
 			{
-				initial_x1 = x_input;
-				// only elements at locs_x1 are changed by RandomInit_test_1st, 
-				// while all the other elements are as x_input.
-				if (!bad && i>0 && RandomInit_test_1st(initial_x1, locs_x1) != SUCCESS)
+				initial_x1 = x_input.SubVector(model_1st.locs_variable()); 
+				if (!bad && i>0 && RandomInit_test_1st(initial_x1, model_1st.locs_variable()) != SUCCESS)
 				{
 					#ifdef DEBUG_MESSAGE
 					cerr << "Randomly initialize parameters of the 1st regime: Error occurred.\n";
@@ -271,7 +283,7 @@ int main(int argc, char **argv)
 				}	
 			} 
 			// bound 
-			if(!bad && MakeLbUb_test(lb,ub,initial_x1.dim) != SUCCESS )
+			if(!bad && MakeLbUb_test(lb,ub,model_1st.locs_variable(),nFree) != SUCCESS )
 			{
 				#ifdef DEBUG_MESSAGE
 				cerr << "MakeLbUb_test: Error occurred.\n"; 
@@ -308,17 +320,14 @@ int main(int argc, char **argv)
 			}	
 			// Update x_input(locs_x1) 
 			if (!bad)
-			{
-				for (unsigned int j=0; j<locs_x1.size(); j++)
-					x_input(locs_x1[j]) = xOptimal_1st(locs_x1[j]); 
-			}
+				x_input.SetSubVector(model_1st.locs_variable(), xOptimal_1st); 
 
 			//////////////////////////////////////////////////////
 			// Second block: 2nd regime parameters only
 			//////////////////////////////////////////////////////
 
 			// obtain z_tm1_last_1st and P_tm1_last_1st to intialize z_02nd and P0_2nd
-        		if (!bad && model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x0, y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+        		if (!bad && model_1st.LogLikelihood(log_likelihood_1st, z_tm1_last_1st, P_tm1_last_1st, p_tm1_last_1st, x_input.SubVector(model_1st.locs_variable()), y1st, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
 			{
 				#ifdef DEBUG_MESSAGE
                 		cerr << "LogLikelihood 1st regime: Error occurred"  << endl; 
@@ -326,6 +335,8 @@ int main(int argc, char **argv)
 				bad = true; 
 			}
 
+			if (!bad && model_2nd.SetConstantPart(x_input.SubVector(model_2nd.locs_constant())) == ERROR_OCCURRED)
+				bad = true;  
 			// initiaize
 			if (!bad)
 			{	
@@ -334,9 +345,9 @@ int main(int argc, char **argv)
                				z0_2nd[j].CopyContent(z_tm1_last_1st[0]); 
                				P0_2nd[j].CopyContent(P_tm1_last_1st[0]); 
         			}
-				initial_x2 = x_input; 
+				initial_x2 = x_input.SubVector(model_2nd.locs_variable()); 
 				// Only initial_x2(locs_x2) are changed by RandomInit_test_2nd
-				if (i>0 && RandomInit_test_2nd(initial_x2, locs_x2) != SUCCESS)
+				if (i>0 && RandomInit_test_2nd(initial_x2, model_2nd.locs_variable()) != SUCCESS)
 				{
 					#ifdef DEBUG_MESSAGE
 					cerr << "Randomly initialize parameters for the 2nd regime: error occurred.\n"; 
@@ -345,7 +356,7 @@ int main(int argc, char **argv)
 				}
 			}
 			// bounds
-			if( !bad && MakeLbUb_test(lb,ub,initial_x2.dim) != SUCCESS )
+			if( !bad && MakeLbUb_test(lb,ub,model_2nd.locs_variable(), nFree) != SUCCESS )
 			{
 				#ifdef DEBUG_MESSAGE
                         	cerr << "MakeLbUb_test: Error occurred.\n";
@@ -382,20 +393,19 @@ int main(int argc, char **argv)
 			}
 			// Update x_input(locs_x2)
 			if (!bad)
-			{
-				for (unsigned int j=0; j<locs_x2.size(); j++)
-					x_input(locs_x2[j]) = xOptimal_2nd(locs_x2[j]); 			
-			}
+				x_input.SetSubVector(model_2nd.locs_variable(),xOptimal_2nd); 
 	
 			////////////////////////////////////////////////////////////
 			// Overall: all parameters
 			///////////////////////////////////////////////////////////
 		
+			if(!bad && model_all.SetConstantPart(x_input.SubVector(model_all.locs_constant())) == ERROR_OCCURRED)
+				bad = true; 
 			// initialize and bound
 			if (!bad)
 			{
-				initial_xall = x_input; 
-				if( !bad && MakeLbUb_test(lb,ub,initial_xall.dim) != SUCCESS )
+				initial_xall = x_input.SubVector(model_all.locs_variable()); 
+				if( !bad && MakeLbUb_test(lb,ub,model_all.locs_variable(),nFree) != SUCCESS )
 				{
 					#ifdef DEBUG_MESSAGE
                         		cerr << "MakeLbUb_test: Error occurred.\n";	
@@ -436,11 +446,10 @@ int main(int argc, char **argv)
 			if (!bad)
 			{
 				// update x_input(locs_xall)
-				for (unsigned int j=0; j<locs_xall.size(); j++)
-					x_input(locs_xall[j]) = xOptimal_all(locs_xall[j]); 
+				x_input.SetSubVector(model_all.locs_variable(), xOptimal_all); 
 			
 				// log-likelihood for final solution x_input
-				if (!bad && model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+				if (!bad && model_all.LogLikelihood(log_likelihood_all, z_tm1_last_all, P_tm1_last_all, p_tm1_last_all, x_input.SubVector(model_all.locs_variable()), y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
 				{
 					#ifdef DEBUG_MESSAGE
 					cerr << "LogLikelihood all: Error occurred\n"; 
@@ -448,7 +457,7 @@ int main(int argc, char **argv)
 					bad = true; 
 				}
 				// log_posterior for final solution x_input
-				if (!bad && model_all.LogPosterior(log_posterior_all, x_input, y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
+				if (!bad && model_all.LogPosterior(log_posterior_all, x_input.SubVector(model_all.locs_variable()), y, z0_1st, P0_1st, initial_prob_1st) != SUCCESS)
 				{
 					#ifdef DEBUG_MESSAGE
 					cerr << "LogPosterior all: Error occurred\n"; 
@@ -459,7 +468,7 @@ int main(int argc, char **argv)
 				{
 					solutions[initial_index*n_tries*2+i](0)=log_posterior_all; 
 					solutions[initial_index*n_tries*2+i](1)=log_likelihood_all; 
-					for (unsigned int j=0; j<x_input.dim; j++)
+					for (int j=0; j<x_input.dim; j++)
 						solutions[initial_index*n_tries*2+i][j+2] = x_input[j]; 
 					if (log_posterior_all > best_solution[0])
 						best_solution = solutions[initial_index*n_tries*2+i]; 
@@ -482,7 +491,7 @@ int main(int argc, char **argv)
                	 for (unsigned int i=0; i<solutions.size(); i++)
                 {
                         // output_file << "\n ================ solution: " << i << "=====================\n";
-                        for (unsigned int j=0; j<solutions[i].dim; j++)
+                        for (int j=0; j<solutions[i].dim; j++)
                                 output_file << setprecision(20) << solutions[i][j] << " ";
                         output_file << endl;
                 }
@@ -498,7 +507,7 @@ int main(int argc, char **argv)
 		for (unsigned int i=0; i<solutions.size(); i++)
 		{
 			// cout << "\n ================ solution: " << i << "=====================\n"; 
-			for (unsigned int j=0; j<solutions[i].dim; j++)
+			for (int j=0; j<solutions[i].dim; j++)
 				cout << setprecision(20) << solutions[i][j] << " "; 
 			cout << endl; 
 		}

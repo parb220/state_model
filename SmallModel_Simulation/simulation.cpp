@@ -15,7 +15,8 @@ using namespace std;
 int main(int argc, char **argv)
 {
 	// random number generator
-	dw_initialize_generator(time(NULL));
+	// dw_initialize_generator(time(NULL));
+	dw_initialize_generator(0); 
 	
 	// Initialize MPI
 	MPI_Init(&argc, &argv); 

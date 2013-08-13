@@ -10,6 +10,8 @@
 // 	ERROR_OCCURRED if failed (number of bounds set is not equal to the number of parameters)
 //
 
+
+
 int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
 {
 	const double INFINITY = -CMSSM::MINUS_INFINITY_LOCAL; 
@@ -49,4 +51,18 @@ int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, size_t bDim, int choice)
    		lb(30) =  0.0;	ub(30) = 1.0;			// probability of staying in regime 2
 	} 
 	return SUCCESS; 
+}
+
+int MakeLbUb_test(TDenseVector &lb, TDenseVector &ub, const vector<int> &locs, size_t bDim, int choice)
+{
+	TDenseVector lb_all, ub_all; 
+	int return_code; 
+	if ((return_code=MakeLbUb_test(lb_all, ub_all, bDim, choice)) != SUCCESS)
+		return 	return_code; 
+	lb = lb_all.SubVector(locs); 
+	ub = ub_all.SubVector(locs); 
+	if (lb.dim == (int)locs.size() && ub.dim == (int)locs.size())
+		return SUCCESS; 
+	else 
+		return ERROR_OCCURRED; 
 }

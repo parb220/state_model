@@ -98,10 +98,11 @@ MPI_OBJS = est_all_mpi.o est_all_master.o est_all_slave.o est_all_mpi_io.o
 #################################################################################
 all : CMSSM_APP 
 
-CMSSM_APP : $(EXE_DIR)/est_all
+CMSSM_APP : $(EXE_DIR)/est_all_mpi
+#$(EXE_DIR)/est_all
 #$(EXE_DIR)/est_all_mpi
 
-$(EXE_DIR)/est_all: $(CSMINWEL_OBJS) $(ERROR_OBJS) $(MATRIX_OBJS) $(GENERIC_OBJS) $(APP_OBJS) $(SINGLE_OBJS)
+$(EXE_DIR)/est_all: $(CSMINWEL_OBJS) $(ERROR_OBJS) $(MATRIX_OBJS) $(GENERIC_OBJS) $(APP_OBJS) $(MPI_OBJS)
 	$(CC) $(CFLAGS) $^ $(LIBS_DIR) $(LIBS) -o $(EXE_DIR)/est_all
 
 %.o : %.c

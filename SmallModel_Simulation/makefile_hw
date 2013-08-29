@@ -13,7 +13,7 @@ USE_WORK_64=USE_WORK_64
 # LIBRARIES SUPPORTED
 #USE_TZ = USE_TZ
 USE_DW = USE_DW
-  #USE_DW_MATRIX = USE_DW_MATRIX
+  USE_DW_MATRIX = USE_DW_MATRIX
   USE_DW_ERROR = USE_DW_ERROR
   #USE_DW_ARRAY = USE_DW_ARRAY
   #USE_DW_ASCII = USE_DW_ASCII
@@ -82,7 +82,7 @@ ERROR_OBJS = dw_error.o
 CSMINWEL_OBJS = dw_csminwel.o
 
 # MATRIX FILES #####################################################################
-MATRIX_OBJS = dw_dense_matrix.o dw_utilities.o dw_rand_gsl.o dw_math.o
+MATRIX_OBJS = dw_dense_matrix.o dw_rand_gsl.o dw_math.o
 
 # PROJECT FILES
 GENERIC_OBJS = CMSSM.o CMSSM_StateEquation.o CMSSM_MeasurementEquation.o CMSSM_TransitionProbMatrix.o CMSSM_ValidInitialPoint.o CMSSM_KalmanFilter.o CMSSM_Maximize_LogLikelihood.o CMSSM_LogLikelihood.o CMSSM_LogPosterior.o CMSSM_Maximize_LogPosterior.o ReadWriteFile.o #CMSSM_CheckSolution.o

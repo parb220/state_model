@@ -168,7 +168,7 @@ double PriorDistrFunction_test_all::log_pdf(const TDenseVector &x)
 	
 	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
 	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
-	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 2.0) );
 	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
@@ -177,21 +177,21 @@ double PriorDistrFunction_test_all::log_pdf(const TDenseVector &x)
 	
 	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
 	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
-	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 2.0) );
 	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 
 	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
 	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
-	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 2.0) );
 	// log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 
 
 	// Per Dan's suggestions on 06/18/2013, all sunspot component parameters ~ N(0,5.0)
 	// Per Dan's suggestions on 06/19/2013, all sunspot component parameters ~ N(0,1.0)
-	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 1.0) );	
+	log_prior_pdf += log(gsl_ran_gaussian_pdf(x(j_), 2.0) );	
 	//log_prior_pdf += log(gsl_ran_gaussian_pdf((x(j_)-1.0), 1.0) ); 
 	// Sunspot component
 	j_ ++; 

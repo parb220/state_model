@@ -23,7 +23,7 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, C
 
 	MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, 0, HILL_CLIMB_TAG, MPI_COMM_WORLD, &status); 
 	unsigned int level = (unsigned int)rPackage[LEVEL_INDEX]; 
-	storage.restore(parameter.BinIndex_Start(level), parameter.BinIndex_End(level)); 
+	storage.restore(level); 
 	size_t nSolution = (size_t)rPackage[LENGTH_INDEX]; 
 	
 	// Hill Climb
@@ -36,13 +36,12 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, C
 
 		if (HillClimb(sample, x0, model_1st, model_2nd, model_all, y1st, y2nd, y) == SUCCESS)
 		{
-			int bIndex = parameter.BinIndex(-sample.weight, level); 
-			storage.DepositSample(bIndex, sample); 
+			storage.DepositSample(level, storage.BinIndex(level,-sample.weight), sample); 
 			max_log_posterior = max_log_posterior > sample.weight ? max_log_posterior : sample.weight; 
 		}
 	}
-	storage.finalize(parameter.BinIndex_Start(level), parameter.BinIndex_End(level)); 
-	storage.ClearDepositDrawHistory(parameter.BinIndex_Start(level), parameter.BinIndex_End(level)); 
+	storage.finalize(level); 
+	storage.ClearDepositDrawHistory(level); 
 
 	double *sPackage = new double[N_MESSAGE]; 
 	sPackage[H0_INDEX] = max_log_posterior; 

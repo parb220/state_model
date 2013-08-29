@@ -103,9 +103,7 @@ double DispatchSimulation(const vector<vector<int> > &nodeGroup, const CEESParam
 	delete [] rPackage;
 
 	// Consolidate partial storage files
-	int start_bin = parameter.BinIndex_Start(level); 
-	int end_bin = parameter.BinIndex_End(level); 
-	storage.consolidate(start_bin, end_bin); 
+	storage.consolidate(level); 
 
 	// Consolidate variance file
 	if (message_tag == TUNE_TAG_SIMULATION_FIRST || message_tag == TUNE_TAG_SIMULATION_SECOND)

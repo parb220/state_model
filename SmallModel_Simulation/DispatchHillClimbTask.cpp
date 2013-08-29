@@ -32,6 +32,6 @@ double DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_cl
 	}
 	delete [] rPackage; 
 
-	storage.consolidate(parameter.BinIndex_Start(parameter.number_energy_level),parameter.BinIndex_End(parameter.number_energy_level)); 
+	storage.consolidate(parameter.number_energy_level); 
 	return max_log_posterior; 
 }

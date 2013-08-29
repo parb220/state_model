@@ -19,7 +19,7 @@ double CEquiEnergy_CMSSM_test :: log_posterior_function(CSampleIDWeight &x)
 	}
 	double bounded_log_posterior; 
 	if (if_bounded)
-		bounded_log_posterior = -(-x.weight>h_bound ? -x.weight:h_bound)/t_bound; 
+		bounded_log_posterior = x.weight/t_bound; 
 	else 
 		bounded_log_posterior = x.weight; 
 	return bounded_log_posterior; 
@@ -38,13 +38,13 @@ double CEquiEnergy_CMSSM_test :: log_likelihood_function(const CSampleIDWeight &
 CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test() : CEquiEnergyModel(), target_model(NULL), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0)) 
 { }
 
-CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test(bool _if_bounded, unsigned int eL, double _h, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model) : CEquiEnergyModel(_if_bounded, eL, _h, _t, _x, _metropolis, _time), target_model(_model), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0))
+CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test(bool _if_bounded, unsigned int eL, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model) : CEquiEnergyModel(_if_bounded, eL, _t, _x, _metropolis, _time), target_model(_model), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0))
 {}
 
 CEquiEnergy_CMSSM_test :: ~CEquiEnergy_CMSSM_test()
 {}
 
-void CEquiEnergy_CMSSM_test::SaveSampleToStorage(const CSampleIDWeight &sample, unsigned int binIndex, CStorageHead &storage)
+void CEquiEnergy_CMSSM_test::SaveSampleToStorage(CStorageHead &storage, const CSampleIDWeight &sample)
 {
 	vector<int> locs_variable = target_model->locs_variable(); 
 	vector<int> locs_constant = target_model->locs_constant(); 
@@ -54,7 +54,7 @@ void CEquiEnergy_CMSSM_test::SaveSampleToStorage(const CSampleIDWeight &sample, 
 	save_sample.data.SetSubVector(locs_constant, target_model->GetConstantPart()); 
 	save_sample.weight = sample.weight; 
 	save_sample.id = sample.id; 
-	storage.DepositSample(binIndex, save_sample); 
+	storage.DepositSample(energy_level, storage.BinIndex(energy_level, -save_sample.weight),save_sample); 
 }
 
 void CEquiEnergy_CMSSM_test::Take_Sample_Just_Drawn_From_Storage(const CSampleIDWeight &x_complete)

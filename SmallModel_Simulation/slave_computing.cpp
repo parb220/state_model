@@ -21,7 +21,6 @@ bool GetCommunicationParameter(const double *rPackage, size_t package_size, CEES
         parameter.deposit_frequency = (size_t)(rPackage[FREQ_INDEX]);
 
         parameter.h0 = rPackage[H0_INDEX];
-        parameter.SetEnergyBound();
         parameter.SetTemperature();
         return true;
 }
@@ -35,7 +34,6 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 		cerr << "slave_computing : ReadOutData() : error occurred in LoadData()\n"; 
 		abort(); 
 	}
-	size_t nSample = y.size(); 
 	size_t nY = y[0].dim; 
 
 	// CMSSM models 
@@ -99,7 +97,6 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 			cerr << "GetCommunicationParameter() : Error occurred.\n"; 
 			abort(); 
 		}
-		simulation_model.h_bound = parameter.h[simulation_model.energy_level]; 
 		simulation_model.t_bound = parameter.t[simulation_model.energy_level]; 		
 		if (status.MPI_TAG == TUNE_TAG_BEFORE_SIMULATION || status.MPI_TAG == TUNE_TAG_AFTER_SIMULATION)
 		{

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <ctime>
 #include <getopt.h>
 #include <cstdlib>
@@ -31,17 +32,16 @@ int main(int argc, char **argv)
 		{"RunID", required_argument, 0, 'r'}, 
 		{"Original", no_argument, 0, 'o'}, 
 		{"nLevel", required_argument, 0, 'n'}, 
-		{"HK", required_argument, 0, 'H'}, 	
 		{"lHigh", required_argument, 0, 'L'}, 
 		{"lLow", required_argument, 0, 'l'},
 		{"H0", required_argument, 0, 'h'}, 
 		{"T0", required_argument, 0, 't'}, 
-		{"cFactor", required_argument, 0, 'c'}, 
+		{"TK", required_argument, 0, 'T'},
 		{"thin", required_argument, 0, 'i'}, 
 		{"ndraws", required_argument, 0, 'w'},
 		{"nInitial", required_argument, 0, 'I'}, 
 		{"HillClimb", required_argument, 0, 'C'},
-		{"TuningDone", no_argument, 0, 'T'},
+		{"TuningDone", no_argument, 0, 'D'},
 		{0, 0, 0, 0}
 	}; 
 	int option_index = 0; 
@@ -51,17 +51,19 @@ int main(int argc, char **argv)
 	
 	CEESParameter parameter; 
 	parameter.storage_marker = 10000; 
-	parameter.run_id = time(NULL); 
+	stringstream convert; 
+	convert.str(string()); 
+	convert << time(NULL); 
+	parameter.run_id = convert.str(); 
 	parameter.storage_dir = getenv("HOME")+string("/state_model/mssm/result/");
 	bool if_original = false;
 	parameter.number_energy_level = 10; 
  	parameter.pee =0.3; 
-	parameter.hk_1 = 200.0; 
 	parameter.highest_level = parameter.number_energy_level -1; 
 	parameter.lowest_level = 0; 
 	parameter.h0 = 0.0; 
 	parameter.t0 = 1.0; 
-	parameter.c_factor = 1.0; 
+	parameter.tk_1 = 1000.0; 
 	parameter.deposit_frequency = 50; 
 	parameter.simulation_length = 10000; 
 	size_t n_initial = 1; 
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		int c = getopt_long(argc, argv, "d:m:r:on:H:L:l:h:t:c:i:w:I:C:T", long_options, &option_index); 
+		int c = getopt_long(argc, argv, "d:m:r:on:H:L:l:h:t:c:i:w:I:C:D", long_options, &option_index); 
 		if (c == -1)
 			break; 
 		switch(c)
@@ -80,23 +82,21 @@ int main(int argc, char **argv)
 			case 'm':
 				minus_infinity = atof(optarg); break; 
 			case 'r':
-				parameter.run_id = atoi(optarg); break; 
+				parameter.run_id = string(optarg); break; 
 			case 'o':
 				if_original = true; break;
 			case 'n':
 				parameter.number_energy_level = atoi(optarg); break;  	
-			case 'H':
-				parameter.hk_1 = atof(optarg); break; 
 			case 'L':
 				parameter.highest_level = atoi(optarg); break; 
 			case 'l':
-				parameter.lowest_level = atoi(optarg); break; 			
+				parameter.lowest_level = atoi(optarg); break; 
 			case 'h':
 				parameter.h0 = atof(optarg); break; 
 			case 't':
 				parameter.t0 = atof(optarg); break; 
-			case 'c':
-				parameter.c_factor = atof(optarg); break;
+			case 'T': 
+				parameter.tk_1 = atof(optarg); break; 
 			case 'i':
 				parameter.deposit_frequency = atoi(optarg); break; 
 	 		case 'w':
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 				n_initial = atoi(optarg); break; 
 			case 'C':
 				number_hill_climb = atoi(optarg); break; 
-			case 'T':
+			case 'D':
 				if_tuning_done = true; break; 
 			default:
 				break; 
@@ -122,10 +122,8 @@ int main(int argc, char **argv)
 		parameter.number_energy_level =1; 
 		parameter.highest_level = parameter.lowest_level = 0; 
 	}
-	parameter.SetEnergyBound(); 
 	parameter.SetTemperature(); 
-	int number_bin = (parameter.number_energy_level+1) * (parameter.number_energy_level+1); 
-	CStorageHead storage(parameter.run_id, parameter.storage_marker, number_bin, parameter.storage_dir, my_rank); 
+	CStorageHead storage(my_rank, parameter.run_id, parameter.storage_marker,parameter.storage_dir,parameter.number_energy_level); 
 
 	if (my_rank == 0)
 	{

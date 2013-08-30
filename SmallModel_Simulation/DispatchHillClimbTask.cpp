@@ -14,7 +14,7 @@ double DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_cl
 	sPackage[LENGTH_INDEX] = n_solution_per_node; 
 	sPackage[LEVEL_INDEX] = parameter.number_energy_level; 
 
-	for (unsigned int i=0; i<node_pool.size(); i++)
+	for (int i=0; i<(int)node_pool.size(); i++)
 		MPI_Send(sPackage, N_MESSAGE, MPI_DOUBLE, node_pool[i], HILL_CLIMB_TAG, MPI_COMM_WORLD); 
 	delete [] sPackage; 
 
@@ -22,7 +22,7 @@ double DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_cl
 	MPI_Status status; 
 	double *rPackage = new double[N_MESSAGE]; 
 	double max_log_posterior; 
-	for (unsigned int i=0; i<node_pool.size(); i++)
+	for (int i=0; i<(int)node_pool.size(); i++)
 	{
 		MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, MPI_ANY_SOURCE, HILL_CLIMB_TAG, MPI_COMM_WORLD, &status); 
 		if (i == 0)

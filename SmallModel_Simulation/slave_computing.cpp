@@ -67,7 +67,7 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 	simulation_model.initial_prob[0] = 1.0; 
 	simulation_model.z_0 = vector<TDenseVector>(model_1st.nXi); 
 	simulation_model.P_0 = vector<TDenseMatrix>(model_1st.nXi); 
-	for (unsigned int i=0; i<model_1st.nXi; i++)
+	for (int i=0; i<model_1st.nXi; i++)
 	{
 		simulation_model.z_0[i].Zeros(model_1st.nZ); 
 		simulation_model.P_0[i] = Identity(model_1st.nZ)*100.0; 
@@ -79,7 +79,7 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 	MPI_Status status; 
 
 	double *rPackage=new double[N_MESSAGE], *sPackage=new double[N_MESSAGE]; 
-	unsigned int group_index; 
+	int group_index; 
 	bool if_within, if_write_file, if_storage; 
 	while (1)
 	{
@@ -90,8 +90,8 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 			delete []rPackage; 
 			exit(0); 
 		}
-		simulation_model.energy_level = (unsigned int)rPackage[LEVEL_INDEX]; 
-		group_index = (unsigned int)rPackage[GROUP_INDEX]; 
+		simulation_model.energy_level = (int)rPackage[LEVEL_INDEX]; 
+		group_index = (int)rPackage[GROUP_INDEX]; 
 		if (!GetCommunicationParameter(rPackage, N_MESSAGE, parameter) )
 		{
 			cerr << "GetCommunicationParameter() : Error occurred.\n"; 

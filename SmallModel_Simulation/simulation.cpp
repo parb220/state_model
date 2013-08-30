@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 		{
 			cerr << "Error in making directory for " << parameter.run_id << endl;
 			double *sMessage= new double [N_MESSAGE];
-			for (unsigned int i=1; i<nNode; i++)
+			for (int i=1; i<nNode; i++)
 				MPI_Send(sMessage, N_MESSAGE, MPI_DOUBLE, i, END_TAG, MPI_COMM_WORLD); 
 			delete [] sMessage; 
 			exit(1);  

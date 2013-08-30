@@ -49,33 +49,33 @@ void SetUpModel(size_t nFree, size_t nY, TDenseVector &fixed_parameter, CMSSM_te
 	vector<int> locs_variable_x1, locs_variable_x2, locs_variable_xall;     // locations of variable parameters for 1st and 2nd regimes, and for all regimes
 	vector<int> locs_constant_x1, locs_constant_x2, locs_constant_xall;     // locations of invariable parameters for 1st and 2nd regimes, and for all regimes
 	// locs_variable_x1 : [0:n1); 
-	for (unsigned int i=0; i<n1; i++)
+	for (int i=0; i<n1; i++)
                 locs_variable_x1.push_back(i);
-        for (unsigned int i=n1; i<nFree; i++)
+        for (int i=n1; i<nFree; i++)
                 locs_constant_x1.push_back(i);
 
 	// locs_variable_x2 : [n1:n1+7), [n1+7+5: n1+7+5+3)
-	for (unsigned int i=0; i<n1; i++)
+	for (int i=0; i<n1; i++)
                 locs_constant_x2.push_back(i);
-        for (unsigned int i=n1; i<n1+7; i++)
+        for (int i=n1; i<n1+7; i++)
                 locs_variable_x2.push_back(i);
-        for (unsigned int i=n1+7; i<n1+7+5; i++)
+        for (int i=n1+7; i<n1+7+5; i++)
                 locs_constant_x2.push_back(i);
-        for (unsigned int i=n1+7+5; i<n1+7+5+3; i++)
+        for (int i=n1+7+5; i<n1+7+5+3; i++)
                 locs_variable_x2.push_back(i);
-        for (unsigned int i=n1+7+5+3; i<nFree; i++)
+        for (int i=n1+7+5+3; i<nFree; i++)
                 locs_constant_x2.push_back(i);
 
 	// locs_variable_xall : [1:n1+7), n1+7+1, [n1+7+5,n1+7+5+4)
-	for (unsigned int i=0; i<n1+7; i++)
+	for (int i=0; i<n1+7; i++)
                 locs_variable_xall.push_back(i);
         locs_constant_xall.push_back(n1+7);
         locs_variable_xall.push_back(n1+7+1);
-        for (unsigned int i=n1+7+2; i<n1+7+5; i++)
+        for (int i=n1+7+2; i<n1+7+5; i++)
                 locs_constant_xall.push_back(i);
-        for (unsigned int i=n1+7+5; i<n1+7+9; i++)
+        for (int i=n1+7+5; i<n1+7+9; i++)
                 locs_variable_xall.push_back(i);
-        for (unsigned int i=n1+7+9; i<nFree; i++)
+        for (int i=n1+7+9; i<nFree; i++)
                 locs_constant_xall.push_back(i);
 	
 	// sizes

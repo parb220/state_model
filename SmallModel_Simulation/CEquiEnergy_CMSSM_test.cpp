@@ -38,7 +38,7 @@ double CEquiEnergy_CMSSM_test :: log_likelihood_function(const CSampleIDWeight &
 CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test() : CEquiEnergyModel(), target_model(NULL), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0)) 
 { }
 
-CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test(bool _if_bounded, unsigned int eL, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model) : CEquiEnergyModel(_if_bounded, eL, _t, _x, _metropolis, _time), target_model(_model), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0))
+CEquiEnergy_CMSSM_test :: CEquiEnergy_CMSSM_test(bool _if_bounded, int eL, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model) : CEquiEnergyModel(_if_bounded, eL, _t, _x, _metropolis, _time), target_model(_model), y(vector<TDenseVector>(0)), z_0(vector<TDenseVector>(0)), P_0(vector<TDenseMatrix>(0)), initial_prob(TDenseVector(0))
 {}
 
 CEquiEnergy_CMSSM_test :: ~CEquiEnergy_CMSSM_test()

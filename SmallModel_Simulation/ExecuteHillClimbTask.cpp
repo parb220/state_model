@@ -22,7 +22,7 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, C
 	MPI_Status status; 
 
 	MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, 0, HILL_CLIMB_TAG, MPI_COMM_WORLD, &status); 
-	unsigned int level = (unsigned int)rPackage[LEVEL_INDEX]; 
+	int level = (int)rPackage[LEVEL_INDEX]; 
 	storage.restore(level); 
 	size_t nSolution = (size_t)rPackage[LENGTH_INDEX]; 
 	
@@ -30,7 +30,7 @@ double ExecuteHillClimbTask(size_t nFree, const TDenseVector &fixed_parameter, C
 	TDenseVector x0;   
 	CSampleIDWeight sample; 
 	double max_log_posterior = CMSSM::MINUS_INFINITY_LOCAL; 
-	for (unsigned int i=0; i<nSolution; i++)
+	for (int i=0; i<nSolution; i++)
 	{
 		x0= InitializeParameter(nFree, fixed_parameter);
 

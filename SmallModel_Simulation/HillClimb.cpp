@@ -21,7 +21,7 @@ int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test &mode
 	// Initial values for initial Kalman filter
 	vector<TDenseVector> z0_1st(model_1st.nXi);
 	vector<TDenseMatrix> P0_1st(model_1st.nXi);
-	for (unsigned int i=0; i<model_1st.nXi; i++)
+	for (int i=0; i<model_1st.nXi; i++)
 	{
 		z0_1st[i].Zeros(model_1st.nZ);
         	P0_1st[i]=Identity(model_1st.nZ)*100.0;
@@ -52,7 +52,7 @@ int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test &mode
 	
 	size_t nFree = (size_t)x0.dim;  
 	x_input = x0;
-	for (unsigned int i_try=0; i_try<n_try; i_try++)
+	for (int i_try=0; i_try<n_try; i_try++)
 	{
 		bad = false; 
 		
@@ -86,7 +86,7 @@ int HillClimb(CSampleIDWeight &optimal, const TDenseVector &x0, CMSSM_test &mode
 		// initialize
 		if(!bad)
 		{
-			for (unsigned int j=0; j<model_2nd.nXi; j++)
+			for (int j=0; j<model_2nd.nXi; j++)
                 	{
                 		z0_2nd[j].CopyContent(z_tm1_last_1st[0]);
                 		P0_2nd[j].CopyContent(P_tm1_last_1st[0]);

@@ -26,7 +26,7 @@ public:
 	// returning value is the real log_likelihood calculated from target_model
 	
 	CEquiEnergy_CMSSM_test(); 
-	CEquiEnergy_CMSSM_test(bool _if_bounded, unsigned int eL, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model); 
+	CEquiEnergy_CMSSM_test(bool _if_bounded, int eL, double _t, const CSampleIDWeight &_x, CMetropolis *_metropolis, time_t _time, CMSSM_test *_model); 
 	virtual ~CEquiEnergy_CMSSM_test(); 
 
 	virtual void SaveSampleToStorage(CStorageHead &storage, const CSampleIDWeight &sample);

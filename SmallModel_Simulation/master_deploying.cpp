@@ -14,7 +14,7 @@ int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb
 	if (number_hill_climb > 0)
 	{
 		vector<int> node_pool(nNode-1); 
-		for (unsigned int i=1; i<nNode; i++)
+		for (int i=1; i<nNode; i++)
 			node_pool[i-1] =i; 
 		max_log_posterior = DispatchHillClimbTask(node_pool, number_hill_climb, parameter, storage); 
 		cout << "HillClimb: max_log_posterior: " << max_log_posterior << endl; 
@@ -22,10 +22,10 @@ int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb
 	
 	// node_group
 	vector<vector<int> >node_group(n_initial); 
-	unsigned int i=1; 
+	int i=1; 
 	while (i<nNode)
 	{
-		for (unsigned int j=0; j<node_group.size() && i<nNode; j++)
+		for (int j=0; j<node_group.size() && i<nNode; j++)
 		{
 			node_group[j].push_back(i); 
 			i++; 
@@ -49,8 +49,8 @@ int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb
 	cout << "Simulation: max_log_posterior: " << max_log_posterior << endl;  
 	
 	double *sMessage= new double [N_MESSAGE];
-        for (unsigned int i=0; i<node_group.size(); i++)
-                for (unsigned int j=0; j<node_group[i].size(); j++)
+        for (int i=0; i<node_group.size(); i++)
+                for (int j=0; j<node_group[i].size(); j++)
                         MPI_Send(sMessage, N_MESSAGE, MPI_DOUBLE, node_group[i][j], END_TAG, MPI_COMM_WORLD);
         delete [] sMessage;
 	return 0; 

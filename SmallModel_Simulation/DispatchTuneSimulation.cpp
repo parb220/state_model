@@ -7,7 +7,7 @@
 #include "storage_parameter.h"
 #include "mpi_parameter.h"
 
-double DispatchSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage, size_t simulation_length, unsigned int level, int tag);
+double DispatchSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage, size_t simulation_length, int level, int tag);
 
 using namespace std; 
 
@@ -28,12 +28,12 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 		sPackage[LENGTH_INDEX] = 0; 	// irrelevant
 
 		// Tune before simulation 
-		for (unsigned int i=0; i<nodeGroup.size(); i++)
+		for (int i=0; i<nodeGroup.size(); i++)
 		{
 			sPackage[GROUP_INDEX] = i; 
 			MPI_Send(sPackage, N_MESSAGE, MPI_DOUBLE, nodeGroup[i][0], TUNE_TAG_BEFORE_SIMULATION, MPI_COMM_WORLD); 
 		}
-		for (unsigned int i=0; i<nodeGroup.size(); i++)
+		for (int i=0; i<nodeGroup.size(); i++)
 			MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, MPI_ANY_SOURCE, TUNE_TAG_BEFORE_SIMULATION, MPI_COMM_WORLD, &status);
 
 		// Simulation to estimate group-specific covariance matrix
@@ -41,12 +41,12 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 		max_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_FIRST);
 
 		// Tune after simulation
-		for (unsigned int i=0; i<nodeGroup.size(); i++)
+		for (int i=0; i<nodeGroup.size(); i++)
 		{
 			sPackage[GROUP_INDEX] = i;
                         MPI_Send(sPackage, N_MESSAGE, MPI_DOUBLE, nodeGroup[i][0], TUNE_TAG_AFTER_SIMULATION, MPI_COMM_WORLD);
 		}
-		for (unsigned int i=0; i<nodeGroup.size(); i++)
+		for (int i=0; i<nodeGroup.size(); i++)
 			MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, MPI_ANY_SOURCE, TUNE_TAG_AFTER_SIMULATION, MPI_COMM_WORLD, &status);
 
 		// simualtion
@@ -61,6 +61,8 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 			received_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_SECOND);
 			max_log_posterior = max_log_posterior < received_log_posterior ? max_log_posterior : received_log_posterior;	
 			storage.binning(level, parameter.number_energy_level, -log(0.5)/(1.0/parameter.t[level-1]-1.0/parameter.t[level]) ); 
+			storage.finalize(level); 
+			storage.ClearDepositDrawHistory(level);
 		}
 	}
 

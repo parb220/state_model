@@ -10,7 +10,7 @@
 #include "storage_parameter.h"
 
 using namespace std; 
-bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, CStorageHead &storage, const CEESParameter &parameter, unsigned int group_index, size_t pool_size)
+bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, CStorageHead &storage, const CEESParameter &parameter, int group_index, size_t pool_size)
 {
 	// start point
 	storage.RestoreForFetch(model.energy_level+1);
@@ -69,7 +69,7 @@ bool ExecuteTuningTask_BeforeSimulation(size_t period, size_t max_period, CEquiE
 }
 
 
-bool ExecuteTuningTask_AfterSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, const CEESParameter &parameter, unsigned int group_index)
+bool ExecuteTuningTask_AfterSimulation(size_t period, size_t max_period, CEquiEnergy_CMSSM_test &model, const CEESParameter &parameter, int group_index)
 {
 	// start point
 	stringstream convert; 

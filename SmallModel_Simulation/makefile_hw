@@ -89,7 +89,7 @@ GENERIC_OBJS = CMSSM.o CMSSM_StateEquation.o CMSSM_MeasurementEquation.o CMSSM_T
 
 APP_OBJS = CMSSM_test.o  CMSSM_test_2nd.o InitializeParameter_test.o MakeLbUb_test.o MeasurementEquationFunction_test_ConvertXtoParameter.o MeasurementEquationFunction_test.o PriorDistrFunction_test_1st.o PriorDistrFunction_test_2nd.o PriorDistrFunction_test_all.o RationalExpectationFunction_test_ConvertXtoParameter.o RationalExpectationFunction_test.o StateEquationFunction_test.o TransitionMatrixFunction_test.o 
 
-EQUI_ENERGY_OBJS = CPutGetBin.o CSampleIDWeight.o CEESParameter.o CMetropolis.o CEquiEnergyModel.o 
+EQUI_ENERGY_OBJS = CPutGetBin.o CSampleIDWeight.o solve_polynomial_equation.o CEESParameter.o CMetropolis.o CEquiEnergyModel.o 
 
 SIMULATION_OBJS = CEquiEnergy_CMSSM_test.o DispatchHillClimbTask.o DispatchSimulation.o DispatchTuneSimulation.o  master_deploying.o HillClimb.o ExecuteHillClimbTask.o ExecuteSimulationTask.o ExecuteTuningTask.o SetUpModel.o slave_computing.o simulation.o
 

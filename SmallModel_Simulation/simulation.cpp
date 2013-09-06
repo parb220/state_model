@@ -34,12 +34,12 @@ int main(int argc, char **argv)
 		{"nLevel", required_argument, 0, 'n'}, 
 		{"lHigh", required_argument, 0, 'L'}, 
 		{"lLow", required_argument, 0, 'l'},
-		{"H0", required_argument, 0, 'h'}, 
 		{"T0", required_argument, 0, 't'}, 
 		{"TK", required_argument, 0, 'T'},
 		{"thin", required_argument, 0, 'i'}, 
+		{"THIN", required_argument, 0, 'I'},
 		{"ndraws", required_argument, 0, 'w'},
-		{"nInitial", required_argument, 0, 'I'}, 
+		{"nInitial", required_argument, 0, 'S'}, 
 		{"HillClimb", required_argument, 0, 'C'},
 		{"TuningDone", no_argument, 0, 'D'},
 		{0, 0, 0, 0}
@@ -61,10 +61,10 @@ int main(int argc, char **argv)
  	parameter.pee =0.3; 
 	parameter.highest_level = parameter.number_energy_level -1; 
 	parameter.lowest_level = 0; 
-	parameter.h0 = 0.0; 
 	parameter.t0 = 1.0; 
 	parameter.tk_1 = 1000.0; 
-	parameter.deposit_frequency = 50; 
+	parameter.thin = 1;
+	parameter.THIN = 100;  
 	parameter.simulation_length = 10000; 
 	size_t n_initial = 1; 
 	size_t number_hill_climb = 0; 
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		int c = getopt_long(argc, argv, "d:m:r:on:H:L:l:h:t:c:i:w:I:C:D", long_options, &option_index); 
+		int c = getopt_long(argc, argv, "d:m:r:on:L:l:t:T:i:I:w:S:C:D", long_options, &option_index); 
 		if (c == -1)
 			break; 
 		switch(c)
@@ -91,17 +91,17 @@ int main(int argc, char **argv)
 				parameter.highest_level = atoi(optarg); break; 
 			case 'l':
 				parameter.lowest_level = atoi(optarg); break; 
-			case 'h':
-				parameter.h0 = atof(optarg); break; 
 			case 't':
 				parameter.t0 = atof(optarg); break; 
 			case 'T': 
 				parameter.tk_1 = atof(optarg); break; 
 			case 'i':
-				parameter.deposit_frequency = atoi(optarg); break; 
+				parameter.thin = atoi(optarg); break; 
+			case 'I': 
+				parameter.THIN = atoi(optarg); break; 
 	 		case 'w':
 				parameter.simulation_length = atoi(optarg); break; 
-			case 'I':
+			case 'S':
 				n_initial = atoi(optarg); break; 
 			case 'C':
 				number_hill_climb = atoi(optarg); break; 

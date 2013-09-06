@@ -7,7 +7,7 @@
 
 using namespace std; 
 
-double DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_climb, const CEESParameter &parameter, CStorageHead &storage)
+void DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_climb, const CEESParameter &parameter, CStorageHead &storage)
 {
 	size_t n_solution_per_node = (size_t)ceil((double)(number_hill_climb)/(double)node_pool.size());
 	double *sPackage = new double[N_MESSAGE]; 
@@ -21,17 +21,9 @@ double DispatchHillClimbTask(const vector<int> &node_pool, size_t number_hill_cl
 	int success=0; 
 	MPI_Status status; 
 	double *rPackage = new double[N_MESSAGE]; 
-	double max_log_posterior; 
 	for (int i=0; i<(int)node_pool.size(); i++)
-	{
 		MPI_Recv(rPackage, N_MESSAGE, MPI_DOUBLE, MPI_ANY_SOURCE, HILL_CLIMB_TAG, MPI_COMM_WORLD, &status); 
-		if (i == 0)
-			max_log_posterior = rPackage[H0_INDEX];
-		else 
-			max_log_posterior = max_log_posterior > rPackage[H0_INDEX] ? max_log_posterior : rPackage[H0_INDEX]; 
-	}
 	delete [] rPackage; 
 
 	storage.consolidate(parameter.number_energy_level); 
-	return max_log_posterior; 
 }

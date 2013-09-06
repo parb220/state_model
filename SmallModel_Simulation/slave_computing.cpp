@@ -18,9 +18,9 @@ bool GetCommunicationParameter(const double *rPackage, size_t package_size, CEES
 {
         parameter.simulation_length = (size_t)(rPackage[LENGTH_INDEX]);
         parameter.burn_in_length = (size_t)(rPackage[BURN_INDEX]);
-        parameter.deposit_frequency = (size_t)(rPackage[FREQ_INDEX]);
+        parameter.thin = (size_t)(rPackage[thin_INDEX]);
+	parameter.THIN = (size_t)(rPackage[THIN_INDEX]);
 
-        parameter.h0 = rPackage[H0_INDEX];
         parameter.SetTemperature();
         return true;
 }
@@ -46,13 +46,10 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 	CMSSM_test model_all; 
 	SetUpModel(nFree, nY, fixed_parameter, model_1st, model_2nd, model_all); 
 	
-	double max_log_posterior = CMSSM::MINUS_INFINITY_LOCAL; 
-	
 	// HillClimb
 	if (number_hill_climb > 0)
 	{
-		double received_log_posterior = ExecuteHillClimbTask(nFree, fixed_parameter, model_1st, model_2nd, model_all, y1st, y2nd, y, parameter, storage); 
-		max_log_posterior = max_log_posterior > received_log_posterior ? max_log_posterior : received_log_posterior; 
+		ExecuteHillClimbTask(nFree, fixed_parameter, model_1st, model_2nd, model_all, y1st, y2nd, y, parameter, storage); 
 	}
 
 	// EquiEnergyModel 
@@ -136,15 +133,12 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
                         else
                                 if_storage = false;
 
-			double received_log_posterior; 
-                        if (!ExecuteSimulationTask(received_log_posterior, if_within, if_write_file, if_storage, simulation_model, storage, parameter, my_rank, group_index, n_initial, status.MPI_TAG) )
+                        if (!ExecuteSimulationTask(if_within, if_write_file, if_storage, simulation_model, storage, parameter, my_rank, group_index, n_initial, status.MPI_TAG) )
 			{
 				cerr << "ExecuteSimulationTask : Error in simulation.\n"; 
 				abort(); 
 			}
-			max_log_posterior = max_log_posterior > received_log_posterior ? max_log_posterior : received_log_posterior; 
 		}
-		sPackage[H0_INDEX] = max_log_posterior; 
 		MPI_Send(sPackage,N_MESSAGE,MPI_DOUBLE, 0, status.MPI_TAG, MPI_COMM_WORLD); 
 	}
 }

@@ -10,14 +10,12 @@ using namespace std;
 
 int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb, size_t n_initial, const CEESParameter &parameter, CStorageHead &storage)
 {
-	double max_log_posterior, received_log_posterior; 
 	if (number_hill_climb > 0)
 	{
 		vector<int> node_pool(nNode-1); 
 		for (int i=1; i<nNode; i++)
 			node_pool[i-1] =i; 
-		max_log_posterior = DispatchHillClimbTask(node_pool, number_hill_climb, parameter, storage); 
-		cout << "HillClimb: max_log_posterior: " << max_log_posterior << endl; 
+		DispatchHillClimbTask(node_pool, number_hill_climb, parameter, storage); 
 	}
 	
 	// node_group
@@ -34,19 +32,12 @@ int master_deploying(size_t nNode, bool if_tuning_done, size_t number_hill_climb
 
 	// tuning
 	if(!if_tuning_done)
-		max_log_posterior=DispatchTuneSimulation(node_group, parameter, storage); 	
+		DispatchTuneSimulation(node_group, parameter, storage); 	
 	else 
 	{
 		for (int level=parameter.highest_level; level>=parameter.lowest_level; level--)
-		{
-			received_log_posterior=DispatchSimulation(node_group, parameter, storage, parameter.simulation_length, level, SIMULATION_TAG);
-			if (level == parameter.highest_level)
-				max_log_posterior = received_log_posterior; 
-			else 
-				max_log_posterior = max_log_posterior > received_log_posterior ? max_log_posterior : received_log_posterior; 
-		}
+			DispatchSimulation(node_group, parameter, storage, parameter.simulation_length, level, SIMULATION_TAG);
 	}
-	cout << "Simulation: max_log_posterior: " << max_log_posterior << endl;  
 	
 	double *sMessage= new double [N_MESSAGE];
         for (int i=0; i<node_group.size(); i++)

@@ -7,23 +7,22 @@
 #include "storage_parameter.h"
 #include "mpi_parameter.h"
 
-double DispatchSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage, size_t simulation_length, int level, int tag);
+void DispatchSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage, size_t simulation_length, int level, int tag);
 
 using namespace std; 
 
-double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage)
+void DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESParameter &parameter, CStorageHead &storage)
 {
 	double *sPackage = new double[N_MESSAGE], *rPackage = new double[N_MESSAGE];  
 	MPI_Status status; 
 
-	double max_log_posterior,  received_log_posterior; 
 	size_t estimation_length; 
 
 	for (int level=parameter.highest_level; level>=parameter.lowest_level; level--)
 	{
 		sPackage[LEVEL_INDEX] = level; 
-		sPackage[H0_INDEX] = parameter.h0;
-		sPackage[FREQ_INDEX] = parameter.deposit_frequency;
+		sPackage[thin_INDEX] = parameter.thin;
+		sPackage[THIN_INDEX] = parameter.THIN; 
 		sPackage[BURN_INDEX] = 0; 	// irrelevant
 		sPackage[LENGTH_INDEX] = 0; 	// irrelevant
 
@@ -38,7 +37,7 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 
 		// Simulation to estimate group-specific covariance matrix
 		estimation_length = 5000; 
-		max_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_FIRST);
+		DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_FIRST);
 
 		// Tune after simulation
 		for (int i=0; i<nodeGroup.size(); i++)
@@ -51,16 +50,15 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 
 		// simualtion
 		cout << "Simulation at " << level << " for " << parameter.simulation_length << endl; 
-		received_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, parameter.simulation_length, level, SIMULATION_TAG);
-                max_log_posterior = max_log_posterior > received_log_posterior ? max_log_posterior : received_log_posterior;
+		DispatchSimulation(nodeGroup, parameter, storage, parameter.simulation_length, level, SIMULATION_TAG);
 	
 		// simualtion for the not-group-specific covariance of the lower temp level
 		if (level > 0)
 		{
 			estimation_length = 5000;
-			received_log_posterior = DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_SECOND);
-			max_log_posterior = max_log_posterior < received_log_posterior ? max_log_posterior : received_log_posterior;	
-			storage.binning(level, parameter.number_energy_level, -log(0.5)/(1.0/parameter.t[level-1]-1.0/parameter.t[level]) ); 
+			DispatchSimulation(nodeGroup, parameter, storage, estimation_length, level, TUNE_TAG_SIMULATION_SECOND);
+			// storage.binning(level, parameter.number_energy_level, -log(0.5)/(1.0/parameter.t[level-1]-1.0/parameter.t[level]) ); 
+			storage.binning_equal_size(level, parameter.number_energy_level) ; 
 			storage.finalize(level); 
 			storage.ClearDepositDrawHistory(level);
 		}
@@ -68,5 +66,4 @@ double DispatchTuneSimulation(const vector<vector<int> > &nodeGroup, const CEESP
 
 	delete []sPackage; 
 	delete []rPackage; 
-	return max_log_posterior; 
 }

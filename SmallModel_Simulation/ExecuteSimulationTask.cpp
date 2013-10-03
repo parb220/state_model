@@ -20,7 +20,8 @@ bool ExecuteSimulationTask(bool if_within, bool if_write_sample_file, bool if_st
 	stringstream convert; 
 	convert << parameter.run_id << "/" << parameter.run_id << START_POINT << model.energy_level << "." << group_index;
 	string start_point_file = parameter.storage_dir + convert.str(); 
-	if (!model.InitializeFromFile(start_point_file) && (storage.empty(model.energy_level+1) || !model.Initialize(storage, pool_size, model.energy_level+1)) )
+	// if (!model.InitializeFromFile(start_point_file) && (storage.empty(model.energy_level+1) || !model.Initialize(storage, pool_size, model.energy_level+1)) )
+	if ( storage.empty(model.energy_level+1) || !model.Initialize(storage, pool_size, model.energy_level+1)) 
 		return false; 
 	
 	// metropolis

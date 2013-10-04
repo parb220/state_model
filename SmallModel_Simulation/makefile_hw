@@ -59,9 +59,7 @@ LIBS := $(LIBS) -lmpich -lopa -lmpl -lrt #MPI-related
 
 #################################################################################
 # PROJECT PATHS
-CSMINWEL_INCLUDE_DIR = $(HOME)/equal_energy_generic_interface/EquiEnergyCPP
 CSMINWEL_DIR = $(HOME)/equal_energy_generic_interface/EquiEnergyCPP
-MATRIX_DIR = $(BASE_DIR)/utilities_dw/matrix/cpp
 PROJECT_DIR = $(HOME)/state_model/mssm
 GENERIC_SRC_DIR = $(PROJECT_DIR)/generic
 SMALL_MODEL_DIR = $(PROJECT_DIR)/SmallModel
@@ -72,8 +70,8 @@ EXE_DIR = $(PROJECT_DIR)/work
 BUILD_DIR = $(PROJECT_DIR)/work
 MATHEMATICA_DIR = $(DROP_BOX_DIR)/ProjectsWithDW/SmallModel/Files4cpp
 
-INCLUDE_DIR := $(INCLUDE_DIR) -I$(CSMINWEL_INCLUDE_DIR) -I$(MATRIX_DIR) -I$(GENERIC_SRC_DIR) -I$(SMALL_MODEL_DIR) -I$(EQUI_ENERGY_DIR) -I$(SMALL_MODEL_SIMULATION_DIR) -I$(MATHEMATICA_DIR)
-VPATH := $(VPATH) $(CSMINWEL_DIR) $(MATRIX_DIR) $(GENERIC_SRC_DIR) $(SMALL_MODEL_DIR) $(EQUI_ENERGY_DIR) $(SMALL_MODEL_SIMULATION_DIR) $(BUILD_DIR) $(EXE_DIR)
+INCLUDE_DIR := $(INCLUDE_DIR) -I$(CSMINWEL_DIR) -I$(GENERIC_SRC_DIR) -I$(SMALL_MODEL_DIR) -I$(EQUI_ENERGY_DIR) -I$(SMALL_MODEL_SIMULATION_DIR) -I$(MATHEMATICA_DIR)
+VPATH := $(VPATH) $(CSMINWEL_DIR) $(GENERIC_SRC_DIR) $(SMALL_MODEL_DIR) $(EQUI_ENERGY_DIR) $(SMALL_MODEL_SIMULATION_DIR) $(BUILD_DIR) $(EXE_DIR)
 
 # ERROR FILES ######################################################################
 ERROR_OBJS = dw_error.o

@@ -13,15 +13,14 @@
 #include "slave_computing.hpp"
 
 using namespace std; 
-
-bool GetCommunicationParameter(const double *rPackage, size_t package_size, CEESParameter &parameter)
+bool GetCommunicationParameter(const double *rPackage, size_t package_size, CEESParameter *parameter)
 {
-        parameter.simulation_length = (size_t)(rPackage[LENGTH_INDEX]);
-        parameter.burn_in_length = (size_t)(rPackage[BURN_INDEX]);
-        parameter.thin = (size_t)(rPackage[thin_INDEX]);
-	parameter.THIN = (size_t)(rPackage[THIN_INDEX]);
+        parameter->simulation_length = (size_t)(rPackage[LENGTH_INDEX]);
+        parameter->burn_in_length = (size_t)(rPackage[BURN_INDEX]);
+        parameter->thin = (size_t)(rPackage[thin_INDEX]);
+        parameter->THIN = (size_t)(rPackage[THIN_INDEX]);
 
-        parameter.SetTemperature();
+        parameter->SetTemperature();
         return true;
 }
 
@@ -58,7 +57,10 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 	simulation_model.timer_when_started = time(NULL); 
 	if (if_original)
 		simulation_model.if_bounded = false; 
-	simulation_model.metropolis = new CMetropolis(&simulation_model); 
+	CMetropolis metropolis(&simulation_model); 
+	simulation_model.metropolis = &metropolis; 
+	simulation_model.parameter = &parameter;
+	simulation_model.storage = &storage; 
 	simulation_model.y = y; 
 	simulation_model.initial_prob=TDenseVector(model_1st.nXi,0.0); 
 	simulation_model.initial_prob[0] = 1.0; 
@@ -89,19 +91,19 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 		}
 		simulation_model.energy_level = (int)rPackage[LEVEL_INDEX]; 
 		group_index = (int)rPackage[GROUP_INDEX]; 
-		if (!GetCommunicationParameter(rPackage, N_MESSAGE, parameter) )
+		if (!GetCommunicationParameter(rPackage, N_MESSAGE, simulation_model.parameter) )
 		{
 			cerr << "GetCommunicationParameter() : Error occurred.\n"; 
 			abort(); 
 		}
-		simulation_model.t_bound = parameter.t[simulation_model.energy_level]; 		
+		simulation_model.t_bound = simulation_model.parameter->t[simulation_model.energy_level]; 		
 		if (status.MPI_TAG == TUNE_TAG_BEFORE_SIMULATION || status.MPI_TAG == TUNE_TAG_AFTER_SIMULATION)
 		{
 			size_t period = 20; 
 			size_t max_period = 16*period; 
 			if (status.MPI_TAG == TUNE_TAG_BEFORE_SIMULATION)
 			{
-				if (!ExecuteTuningTask_BeforeSimulation(period, max_period, simulation_model, storage, parameter, group_index, n_initial) )
+				if (!ExecuteTuningTask_BeforeSimulation(period, max_period, simulation_model, group_index, n_initial) )
 				{
 					cerr << "ExecuteTuningTask_BeforeSimulation() : Error occurred :: sample file reading or block_file writing or start_tune_point writing error.\n";
                                 	abort();
@@ -109,7 +111,7 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
 			}
 			else 
 			{
-				if (!ExecuteTuningTask_AfterSimulation(period, max_period, simulation_model, parameter, group_index) )
+				if (!ExecuteTuningTask_AfterSimulation(period, max_period, simulation_model, group_index) )
 				{
 					cerr << "ExecuteTuningTask_AfterSimulation() : Error occurred :: start_tune_point file reading or sample file reading or block_file writing error.\n";
                                         abort();
@@ -133,7 +135,7 @@ int slave_computing(bool if_original, size_t number_hill_climb, size_t n_initial
                         else
                                 if_storage = false;
 
-                        if (!ExecuteSimulationTask(if_within, if_write_file, if_storage, simulation_model, storage, parameter, my_rank, group_index, n_initial, status.MPI_TAG) )
+                        if (!ExecuteSimulationTask(if_within, if_write_file, if_storage, simulation_model,  my_rank, group_index, n_initial, status.MPI_TAG) )
 			{
 				cerr << "ExecuteSimulationTask : Error in simulation.\n"; 
 				abort(); 
